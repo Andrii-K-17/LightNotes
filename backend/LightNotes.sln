@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightNotes.Infrastructure",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightNotes.Domain", "LightNotes.Domain\LightNotes.Domain.csproj", "{53A7AAAB-A681-4696-AF30-ED07CED56D37}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightNotes.Tests", "LightNotes.Tests\LightNotes.Tests.csproj", "{B626DBD6-ED20-48CE-8955-433DE56276D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{53A7AAAB-A681-4696-AF30-ED07CED56D37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53A7AAAB-A681-4696-AF30-ED07CED56D37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53A7AAAB-A681-4696-AF30-ED07CED56D37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B626DBD6-ED20-48CE-8955-433DE56276D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B626DBD6-ED20-48CE-8955-433DE56276D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B626DBD6-ED20-48CE-8955-433DE56276D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B626DBD6-ED20-48CE-8955-433DE56276D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

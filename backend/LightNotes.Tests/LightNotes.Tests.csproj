@@ -17,6 +17,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LightNotes.Application\LightNotes.Application.csproj" />
+    <ProjectReference Include="..\LightNotes.Infrastructure\LightNotes.Infrastructure.csproj" />
+    <ProjectReference Include="..\LightNotes.API\LightNotes.API.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
