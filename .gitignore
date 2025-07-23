@@ -1,0 +1,35 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+*.suo
+
+# Visual Studio
+.vs/
+.vscode/
+
+# Logs
+*.log
+
+# Secret config files
+**/appsettings.Development.json
+**/appsettings.*.json
+!**/appsettings.json
+
+# EF Core generated files
+**/Migrations/*.Designer.cs
+**/Migrations/*ModelSnapshot.cs
+
+# Node.js (frontend)
+frontend/node_modules/
+frontend/dist/
+
+# Environment variables
+frontend/.env
+frontend/.env.*
+
+# OS-specific
+.DS_Store
+Thumbs.db
