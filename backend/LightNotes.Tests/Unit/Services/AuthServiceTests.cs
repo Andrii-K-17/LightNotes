@@ -33,7 +33,7 @@ public class AuthServiceTests
     [Fact]
     public async Task RegisterAsync_ReturnsAuthResponse_WhenEmailIsNew()
     {
-        var context = new ApplicationDbContext(CreateOptions());
+        await using var context = new ApplicationDbContext(CreateOptions());
         var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
 
         var request = new RegisterRequestDto
@@ -54,7 +54,7 @@ public class AuthServiceTests
     [Fact]
     public async Task RegisterAsync_ReturnsNull_WhenEmailExists()
     {
-        var context = new ApplicationDbContext(CreateOptions());
+        await using var context = new ApplicationDbContext(CreateOptions());
 
         context.Users.Add(new User
         {
@@ -81,7 +81,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginAsync_ReturnsAuthResponse_WhenCredentialsAreValid()
     {
-        var context = new ApplicationDbContext(CreateOptions());
+        await using var context = new ApplicationDbContext(CreateOptions());
 
         var password = "ValidPass123";
         var user = new User
@@ -113,7 +113,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginAsync_ReturnsNull_WhenUserNotFound()
     {
-        var context = new ApplicationDbContext(CreateOptions());
+        await using var context = new ApplicationDbContext(CreateOptions());
         var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
 
         var request = new LoginRequestDto
@@ -130,7 +130,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginAsync_ReturnsNull_WhenPasswordIsWrong()
     {
-        var context = new ApplicationDbContext(CreateOptions());
+        await using var context = new ApplicationDbContext(CreateOptions());
 
         context.Users.Add(new User
         {
