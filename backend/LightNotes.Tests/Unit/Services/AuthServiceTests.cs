@@ -30,52 +30,49 @@ public class AuthServiceTests
             .Options;
     }
 
-    [Fact]
-    public async Task RegisterAsync_ReturnsAuthResponse_WhenEmailIsNew()
+    private static async Task<User> CreateTestUserAsync(ApplicationDbContext context, string? password = "", string? email = null)
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            Email = email ?? $"{Guid.NewGuid()}@example.com",
+            Name = "Test User"
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+        return user;
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RegisterAsync_ReturnsNullOrAuthResponse_DependsOnEmailExistence(bool emailExists)
     {
         await using var context = new ApplicationDbContext(CreateOptions());
+        var existingUser = await CreateTestUserAsync(context, "existing@example.com");
         var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
 
         var request = new RegisterRequestDto
         {
-            Email = "new@example.com",
+            Email = emailExists ? existingUser.Email : "new@example.com",
             Password = "Password123",
             Name = "New User"
         };
 
         var result = await service.RegisterAsync(request);
 
-        Assert.NotNull(result);
-        Assert.Equal(request.Email, result.Email);
-        Assert.Equal(request.Name, result.Name);
-        Assert.False(string.IsNullOrWhiteSpace(result.Token));
-    }
-
-    [Fact]
-    public async Task RegisterAsync_ReturnsNull_WhenEmailExists()
-    {
-        await using var context = new ApplicationDbContext(CreateOptions());
-
-        context.Users.Add(new User
+        if (emailExists)
         {
-            Email = "existing@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("any"),
-            Name = "Existing"
-        });
-        await context.SaveChangesAsync();
-
-        var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
-
-        var request = new RegisterRequestDto
+            Assert.Null(result);
+        }
+        else
         {
-            Email = "existing@example.com",
-            Password = "NewPassword123",
-            Name = "Existing User"
-        };
-
-        var result = await service.RegisterAsync(request);
-
-        Assert.Null(result);
+            Assert.NotNull(result);
+            Assert.Equal(request.Email, result.Email);
+            Assert.Equal(request.Name, result.Name);
+            Assert.False(string.IsNullOrWhiteSpace(result.Token));
+        }
     }
 
     [Fact]
@@ -83,16 +80,9 @@ public class AuthServiceTests
     {
         await using var context = new ApplicationDbContext(CreateOptions());
 
-        var password = "ValidPass123";
-        var user = new User
-        {
-            Email = "valid@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-            Name = "Valid User"
-        };
+        var password = "ValidPassword123";
 
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
+        var user = await CreateTestUserAsync(context, password: "ValidPassword123");
 
         var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
 
@@ -110,42 +100,21 @@ public class AuthServiceTests
         Assert.False(string.IsNullOrWhiteSpace(result.Token));
     }
 
-    [Fact]
-    public async Task LoginAsync_ReturnsNull_WhenUserNotFound()
+    [Theory]
+    [InlineData("Password is wrong", "user@example.com", "wrong", "correct_password")]
+    [InlineData("User not found", "missing@example.com", "password", null)]
+    public async Task LoginAsync_ReturnsNull_WhenPasswordIsWrongOrUserNotFound(string condition, string email, string inputPassword, string? actualPassword)
     {
         await using var context = new ApplicationDbContext(CreateOptions());
         var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
 
-        var request = new LoginRequestDto
-        {
-            Email = "missing@example.com",
-            Password = "password"
-        };
-
-        var result = await service.LoginAsync(request);
-
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task LoginAsync_ReturnsNull_WhenPasswordIsWrong()
-    {
-        await using var context = new ApplicationDbContext(CreateOptions());
-
-        context.Users.Add(new User
-        {
-            Email = "user@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("correct"),
-            Name = "Test"
-        });
-        await context.SaveChangesAsync();
-
-        var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
+        if (condition == "Password is wrong")
+            await CreateTestUserAsync(context, email, actualPassword);
 
         var request = new LoginRequestDto
         {
-            Email = "user@example.com",
-            Password = "wrong"
+            Email = email,
+            Password = inputPassword
         };
 
         var result = await service.LoginAsync(request);
