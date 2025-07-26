@@ -1,8 +1,8 @@
 namespace LightNotes.Application.DTOs.Auth;
 
 /// <summary>
-/// DTO-відповідь, що повертається після логіну або реєстрації
-/// Містить дані користувача та JWT токен
+/// DTO-відповідь, що повертається після логіну або реєстрації.
+/// <para>Містить дані користувача та JWT токен</para>
 /// </summary>
 public class AuthResponseDto
 {
