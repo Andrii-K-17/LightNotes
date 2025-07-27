@@ -64,3 +64,5 @@ app.MapHub<NoteChatHub>("/notechathub"); // Маршрут для SignalR чат
 app.MapControllers(); // Маршрути контролерів
 
 app.Run();
+
+public partial class Program { }
