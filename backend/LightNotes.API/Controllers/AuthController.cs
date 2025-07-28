@@ -11,12 +11,17 @@ public class AuthController(IAuthService authService) : ControllerBase
     private readonly IAuthService _authService = authService;
 
     /// <summary>
-    /// Реєстрація нового користувача
+    /// Реєстрація нового користувача.
     /// </summary>
-    /// <returns>Інформація про зареєстрованого користувача або помилка</returns>
+    /// <returns>Інформація про зареєстрованого користувача або помилка.</returns>
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         var response = await _authService.RegisterAsync(request);
 
         if (response == null)
@@ -28,12 +33,17 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     /// <summary>
-    /// Вхід користувача в систему
+    /// Вхід користувача в систему.
     /// </summary>
-    /// <returns>Інформація про користувача або помилка автентифікації</returns>
+    /// <returns>Інформація про користувача або помилка автентифікації.</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         var response = await _authService.LoginAsync(request);
 
         if (response == null)
