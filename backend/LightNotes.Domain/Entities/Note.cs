@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace LightNotes.Domain.Entities;
 
 /// <summary>
@@ -5,16 +7,23 @@ namespace LightNotes.Domain.Entities;
 /// </summary>
 public class Note : BaseEntity
 {
-    public string Title { get; set; } = string.Empty; // Заголовок нотатки
-    public string Content { get; set; } = string.Empty; // Зміст нотатки
-    public string? Color { get; set; } // Колір нотатки
-    public Guid OwnerId { get; set; } // Id власника нотатки
-    public bool IsPinned { get; set; } = false; // Закріплена нотатка
-    public bool IsArchived { get; set; } = false; // Архівована нотатка
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow; // Час останнього оновлення
+    [Required]
+    [MaxLength(100)]
+    public string Title { get; set; } = string.Empty;
+
+    [Required]
+    public string Content { get; set; } = string.Empty;
+
+    [MaxLength(20)]
+    public string? Color { get; set; }
+
+    public Guid OwnerId { get; set; }
+
+    public bool IsPinned { get; set; } = false;
+    public bool IsArchived { get; set; } = false;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ReminderAt { get; set; } // Час нагадування
 
-    // Навігаційні властивості
     public User Owner { get; set; } = null!;
     public ICollection<NoteCollaborator> Collaborators { get; set; } = new HashSet<NoteCollaborator>();
     public ICollection<NoteTag> Tags { get; set; } = new HashSet<NoteTag>();

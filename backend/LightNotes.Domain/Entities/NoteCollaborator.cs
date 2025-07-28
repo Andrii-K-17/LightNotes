@@ -7,11 +7,10 @@ namespace LightNotes.Domain.Entities;
 /// </summary>
 public class NoteCollaborator : BaseEntity
 {
-    public Guid NoteId { get; set; } // Зовнішній ключ до нотатки
-    public Guid UserId { get; set; } // Зовнішній ключ до користувача
-    public Role Role { get; set; } // Роль користувача
+    public Guid NoteId { get; set; }
+    public Guid UserId { get; set; }
+    public Role Role { get; set; }
 
-    // Навігаційні властивості
     public Note Note { get; set; } = null!;
     public User User { get; set; } = null!;
 }

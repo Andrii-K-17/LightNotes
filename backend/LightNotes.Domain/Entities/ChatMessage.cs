@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace LightNotes.Domain.Entities;
 
 /// <summary>
@@ -5,12 +7,14 @@ namespace LightNotes.Domain.Entities;
 /// </summary>
 public class ChatMessage : BaseEntity
 {
-    public Guid NoteId { get; set; } // Зовнішній ключ до нотатки
-    public Guid SenderId { get; set; } // Зовнішній ключ до користувача
-    public string Text { get; set; } = string.Empty; // Текст повідомлення
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow; // Час відправлення
+    public Guid NoteId { get; set; }
+    public Guid SenderId { get; set; }
 
-    // Навігаційні властивості
+    [Required]
+    [MaxLength(1000)]
+    public string Text { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
     public Note Note { get; set; } = null!;
     public User Sender { get; set; } = null!;
 }
