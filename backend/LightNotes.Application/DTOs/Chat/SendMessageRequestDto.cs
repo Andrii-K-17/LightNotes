@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace LightNotes.Application.DTOs.Chat;
 
 /// <summary>
@@ -5,5 +7,7 @@ namespace LightNotes.Application.DTOs.Chat;
 /// </summary>
 public class SendMessageRequestDto
 {
+    [Required]
+    [MaxLength(500, ErrorMessage = "Повідомлення не повинно перевищувати 500 символів.")]
     public string Text { get; set; } = string.Empty;
 }
