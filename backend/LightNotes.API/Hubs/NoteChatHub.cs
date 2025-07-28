@@ -21,8 +21,11 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
     private Guid GetUserId()
     {
         var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
             throw new HubException("Не вдалося отримати ідентифікатор користувача.");
+        }
 
         return userId;
     }
@@ -33,9 +36,9 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
     public async Task JoinNoteChat(Guid noteId)
     {
         var userId = GetUserId();
-        var note = await _noteService.GetNoteByIdAsync(noteId, userId);
-        if (note == null)
-            throw new HubException("У вас немає доступу до цієї замітки.");
+
+        var note = await _noteService.GetNoteByIdAsync(noteId, userId)
+            ?? throw new HubException("У вас немає доступу до цієї замітки.");
 
         await Groups.AddToGroupAsync(Context.ConnectionId, noteId.ToString());
     }
@@ -54,10 +57,15 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
     /// </summary>
     public async Task SendMessage(Guid noteId, SendMessageRequestDto request)
     {
+        if (string.IsNullOrWhiteSpace(request?.Text))
+        {
+            throw new HubException("Повідомлення не може бути порожнім.");
+        }
+
         var senderId = GetUserId();
-        var note = await _noteService.GetNoteByIdAsync(noteId, senderId);
-        if (note == null)
-            throw new HubException("У вас немає доступу до цієї замітки.");
+
+        var note = await _noteService.GetNoteByIdAsync(noteId, senderId)
+            ?? throw new HubException("У вас немає доступу до цієї замітки.");
 
         var message = await _chatService.SaveMessageAsync(noteId, senderId, request);
         await Clients.Group(noteId.ToString()).SendAsync("ReceiveMessage", message);
@@ -73,7 +81,9 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
 
         var result = await _chatService.DeleteMessageAsync(messageId, userId);
         if (!result)
+        {
             throw new HubException("Не вдалося видалити повідомлення.");
+        }
 
         await Clients.Group(noteId.ToString()).SendAsync("MessageDeleted", messageId);
     }
@@ -85,9 +95,9 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
     public async Task GetChatHistory(Guid noteId)
     {
         var userId = GetUserId();
-        var history = await _chatService.GetChatHistoryAsync(noteId, userId);
-        if (history == null)
-            throw new HubException("У вас немає доступу до історії чату цієї замітки.");
+
+        var history = await _chatService.GetChatHistoryAsync(noteId, userId)
+            ?? throw new HubException("У вас немає доступу до історії чату цієї замітки.");
 
         await Clients.Caller.SendAsync("ReceiveChatHistory", history);
     }
