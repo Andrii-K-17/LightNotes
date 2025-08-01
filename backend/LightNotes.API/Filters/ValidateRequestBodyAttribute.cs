@@ -31,9 +31,11 @@ public class ValidateRequestBodyAttribute(string actionDescription) : ActionFilt
         if (!hasValidBody)
         {
             logger?.LogWarning("User {UserId} did not provide a request body for {MethodName}.", userId, methodName);
-            context.Result = new BadRequestObjectResult(new
+            context.Result = new BadRequestObjectResult(new ProblemDetails
             {
-                error = $"Empty request body for {_actionDescription}."
+                Title = "Empty request body",
+                Detail = $"Request body is missing or empty for {_actionDescription}.",
+                Status = 400
             });
         }
     }
