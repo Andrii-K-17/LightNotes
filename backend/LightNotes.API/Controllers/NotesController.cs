@@ -2,46 +2,104 @@ using LightNotes.Application.DTOs.Notes;
 using LightNotes.Application.Services.Notes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Security.Claims;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.SignalR;
 using LightNotes.API.Hubs;
+using System.Security.Claims;
 using System.Security.Authentication;
+using LightNotes.API.Filters;
 
 namespace LightNotes.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class NotesController(INoteService noteService, IHubContext<NoteChatHub> hubContext) : ControllerBase
+public class NotesController(INoteService noteService, IHubContext<NoteChatHub> hubContext, ILogger<NotesController> logger) : ControllerBase
 {
     private readonly INoteService _noteService = noteService;
     private readonly IHubContext<NoteChatHub> _hubContext = hubContext;
+    private readonly ILogger<NotesController> _logger = logger;
+
+    private Guid CurrentUserId => GetUserId();
+    private string CurrentUserName => User.Identity?.Name ?? "Unknown user";
+
+    /// <summary>
+    /// Перевіряє, чи є переданий Guid недійсним (тобто рівним Guid.Empty).
+    /// </summary>
+    private static bool IsInvalid(Guid id) => id == Guid.Empty;
 
     /// <summary>
     /// Отримує ідентифікатор користувача з JWT.
     /// </summary>
     private Guid GetUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (id == null || !Guid.TryParse(id, out var userId))
         {
-            throw new AuthenticationException("Не вдалося отримати ідентифікатор користувача з токена.");
+            _logger.LogWarning("Не вдалося отримати ID користувача з токена.");
+            throw new AuthenticationException("Authentication error: User ID not found.");
         }
-
         return userId;
+    }
+
+    /// <summary>
+    /// Надсилає повідомлення клієнтам, які підписані на групу з вказаним ідентифікатором нотатки.
+    /// </summary>
+    private async Task NotifyClientsAsync(Guid noteId, string method, string message)
+    {
+        await _hubContext.Clients.Group(noteId.ToString()).SendAsync(method, new
+        {
+            message,
+            user = CurrentUserName
+        });
+    }
+
+    /// <summary>
+    /// Повертає помилку 400 (Bad Request), якщо передано недійсний ідентифікатор.
+    /// </summary>
+    private ObjectResult InvalidId(string name)
+    {
+        return Problem(
+            title: "Invalid identifier",
+            detail: $"{name} is invalid.",
+            statusCode: StatusCodes.Status400BadRequest
+        );
+    }
+
+    /// <summary>
+    /// Повертає відповідь з кодом 404, якщо нотатку не знайдено або немає доступу до неї.
+    /// </summary>
+    private ObjectResult NoteNotFoundProblem()
+    {
+        return Problem(
+            title: "Note not found",
+            detail: "The note was not found or you do not have access to it.",
+            statusCode: StatusCodes.Status404NotFound
+        );
+    }
+
+    /// <summary>
+    /// Повертає нотатку за ідентифікатором для поточного користувача або null, якщо не знайдено.
+    /// </summary>
+    private async Task<NoteResponseDto?> TryGetNote(Guid id)
+    {
+        var note = await _noteService.GetNoteByIdAsync(id, CurrentUserId);
+        if (note == null)
+        {
+            _logger.LogWarning("Спроба доступу до недоступної або неіснуючої нотатки {NoteId} користувачем {UserId}.", id, CurrentUserId);
+        }
+        return note;
     }
 
     /// <summary>
     /// Отримати всі нотатки користувача.
     /// </summary>
     [HttpGet]
+    [LogOperation("Get all notes")]
     public async Task<IActionResult> GetAllNotes()
     {
-        var userId = GetUserId();
-        var notes = await _noteService.GetAllNotesAsync(userId);
+        _logger.LogInformation("Користувач {UserId} запитав всі нотатки.", CurrentUserId);
+        var notes = await _noteService.GetAllNotesAsync(CurrentUserId);
+
         return Ok(notes);
     }
 
@@ -49,19 +107,19 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Отримати нотатку за її ідентифікатором.
     /// </summary>
     [HttpGet("{id}")]
+    [LogOperation("Get note by ID")]
     public async Task<IActionResult> GetNoteById(Guid id)
     {
-        if (id == Guid.Empty)
+        if (IsInvalid(id))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Отримано недійсний noteId від користувача {UserId}.", CurrentUserId);
+            return InvalidId("noteId");
         }
 
-        var userId = GetUserId();
-        var note = await _noteService.GetNoteByIdAsync(id, userId);
-
+        var note = await TryGetNote(id);
         if (note == null)
         {
-            return NotFound(new { message = "Нотатку не знайдено або у вас немає доступу." });
+            return NoteNotFoundProblem();
         }
 
         return Ok(note);
@@ -71,53 +129,36 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Створити нову нотатку.
     /// </summary>
     [HttpPost]
+    [LogOperation("Create a new note")]
+    [ValidateRequestBody("creating a note")]
     public async Task<IActionResult> CreateNote([FromBody] NoteRequestDto request)
     {
-        if (request == null)
-        {
-            return BadRequest(new { message = "Дані не надано." });
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        var userId = GetUserId();
-        var newNote = await _noteService.CreateNoteAsync(request, userId);
-        return CreatedAtAction(nameof(GetNoteById), new { id = newNote.Id }, newNote);
+        var newNote = await _noteService.CreateNoteAsync(request, CurrentUserId);
+        return CreatedAtAction(nameof(CreateNote), new { id = newNote.Id }, newNote);
     }
 
     /// <summary>
     /// Оновити існуючу нотатку.
     /// </summary>
     [HttpPut("{id}")]
+    [LogOperation("Update an existing note")]
+    [ValidateRequestBody("updating a note")]
     public async Task<IActionResult> UpdateNote(Guid id, [FromBody] NoteRequestDto request)
     {
-        if (id == Guid.Empty)
+        if (IsInvalid(id))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний ID для {MethodName}.", CurrentUserId, nameof(UpdateNote));
+            return InvalidId("noteId");
         }
 
-        if (request == null)
-        {
-            return BadRequest(new { message = "Дані не надано." });
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        var userId = GetUserId();
-        var updatedNote = await _noteService.UpdateNoteAsync(id, request, userId);
-
+        var updatedNote = await _noteService.UpdateNoteAsync(id, request, CurrentUserId);
         if (updatedNote == null)
         {
-            return NotFound(new { message = "Нотатку не знайдено або у вас немає прав на її оновлення." });
+            _logger.LogWarning("Користувач {UserId} не зміг оновити нотатку {NoteId}: доступ заборонено або не існує.", CurrentUserId, id);
+            return NoteNotFoundProblem();
         }
 
-        await _hubContext.Clients.Group(id.ToString()).SendAsync("NoteUpdated", $"Нотатку '{updatedNote.Title}' оновлено користувачем {User.Identity?.Name ?? "Невідомий"}!");
+        await NotifyClientsAsync(id, "NoteUpdated", $"Нотатку \"{updatedNote.Title}\" оновлено.");
 
         return Ok(updatedNote);
     }
@@ -126,22 +167,23 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Архівувати нотатку.
     /// </summary>
     [HttpDelete("{id}")]
+    [LogOperation("Archive note")]
     public async Task<IActionResult> ArchiveNote(Guid id)
     {
-        if (id == Guid.Empty)
+        if (IsInvalid(id))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний ID для {MethodName}.", CurrentUserId, nameof(ArchiveNote));
+            return InvalidId("noteId");
         }
 
-        var userId = GetUserId();
-        var note = await _noteService.ArchiveNoteAsync(id, userId);
-
+        var note = await _noteService.ArchiveNoteAsync(id, CurrentUserId);
         if (note == null)
         {
-            return NotFound(new { message = "Нотатку не знайдено або у вас немає прав на архівування." });
+            _logger.LogWarning("Користувач {UserId} не знайшов нотатку {NoteId} для архівації.", CurrentUserId, id);
+            return NoteNotFoundProblem();
         }
 
-        await _hubContext.Clients.Group(id.ToString()).SendAsync("NoteArchived", $"Нотатку '{note.Title}' архівовано користувачем {User.Identity?.Name ?? "Невідомий"}!");
+        await NotifyClientsAsync(id, "NoteArchived", $"Нотатку \"{note.Title}\" перенесено до архіву.");
 
         return NoContent();
     }
@@ -150,22 +192,23 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Відновити архівовану нотатку.
     /// </summary>
     [HttpPost("{id}/restore")]
+    [LogOperation("Restore note")]
     public async Task<IActionResult> RestoreNote(Guid id)
     {
-        if (id == Guid.Empty)
+        if (IsInvalid(id))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний ID для {MethodName}.", CurrentUserId, nameof(RestoreNote));
+            return InvalidId("noteId");
         }
 
-        var userId = GetUserId();
-        var note = await _noteService.RestoreNoteAsync(id, userId);
-
+        var note = await _noteService.RestoreNoteAsync(id, CurrentUserId);
         if (note == null)
         {
-            return NotFound(new { message = "Нотатку не знайдено або у вас немає прав на відновлення." });
+            _logger.LogWarning("Користувач {UserId} не знайшов нотатку {NoteId} для відновлення.", CurrentUserId, id);
+            return NoteNotFoundProblem();
         }
 
-        await _hubContext.Clients.Group(id.ToString()).SendAsync("NoteRestored", $"Нотатку '{note.Title}' відновлено користувачем {User.Identity?.Name ?? "Невідомий"}!");
+        await NotifyClientsAsync(id, "NoteRestored", $"Нотатку \"{note.Title}\" відновлено.");
 
         return NoContent();
     }
@@ -174,22 +217,27 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Повністю видалити нотатку.
     /// </summary>
     [HttpDelete("{id}/permanent")]
+    [LogOperation("Permanently delete note")]
     public async Task<IActionResult> DeleteNotePermanently(Guid id)
     {
-        if (id == Guid.Empty)
+        if (IsInvalid(id))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний ID для {MethodName}.", CurrentUserId, nameof(DeleteNotePermanently));
+            return InvalidId("noteId");
         }
 
-        var userId = GetUserId();
-        var result = await _noteService.DeleteNotePermanentlyAsync(id, userId);
-
+        var result = await _noteService.DeleteNotePermanentlyAsync(id, CurrentUserId);
         if (!result)
         {
-            return NotFound(new { message = "Нотатку не знайдено або у вас немає прав на її повне видалення." });
+            _logger.LogWarning("Користувач {UserId} не зміг повністю видалити нотатку {NoteId}.", CurrentUserId, id);
+            return Problem(
+                title: "Resource not found",
+                detail: "The note was not found or you don't have permission to delete it.",
+                statusCode: StatusCodes.Status404NotFound
+            );
         }
 
-        await _hubContext.Clients.Group(id.ToString()).SendAsync("NoteDeleted", $"Нотатку ID {id} остаточно видалено користувачем {User.Identity?.Name ?? "Невідомий"}!");
+        await NotifyClientsAsync(id, "NoteDeleted", $"Нотатку ID {id} остаточно видалено.");
 
         return NoContent();
     }
@@ -198,36 +246,25 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Додати учасника до нотатки.
     /// </summary>
     [HttpPost("{noteId}/collaborators")]
+    [LogOperation("Add collaborator to note")]
+    [ValidateRequestBody("adding a collaborator")]
     public async Task<IActionResult> AddCollaborator(Guid noteId, [FromBody] AddCollaboratorRequestDto request)
     {
-        if (noteId == Guid.Empty)
+        if (IsInvalid(noteId))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний noteId для {MethodName}.", CurrentUserId, nameof(AddCollaborator));
+            return InvalidId("noteId");
         }
 
-        if (request == null)
-        {
-            return BadRequest(new { message = "Дані не надано." });
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        var requestingUserId = GetUserId();
-        var newCollaborator = await _noteService.AddCollaboratorAsync(noteId, request, requestingUserId);
-
+        var newCollaborator = await _noteService.AddCollaboratorAsync(noteId, request, CurrentUserId);
         if (newCollaborator == null)
         {
-            var note = await _noteService.GetNoteByIdAsync(noteId, requestingUserId);
-
-            if (note == null)
-            {
-                return NotFound(new { message = "Нотатку не знайдено." });
-            }
-
-            return BadRequest(new { message = "Не вдалося додати учасника. Перевірте права або дані користувача." });
+            _logger.LogWarning("Користувач {UserId} не зміг додати учасника до нотатки {NoteId}.", CurrentUserId, noteId);
+            return Problem(
+                title: "Failed to add collaborator",
+                detail: "Please check permissions or user data.",
+                statusCode: StatusCodes.Status400BadRequest
+            );
         }
 
         return Ok(newCollaborator);
@@ -237,36 +274,25 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Оновити роль учасника.
     /// </summary>
     [HttpPut("{noteId}/collaborators/{collaboratorUserId}")]
+    [LogOperation("Update collaborator role")]
+    [ValidateRequestBody("updating a role")]
     public async Task<IActionResult> UpdateCollaboratorRole(Guid noteId, Guid collaboratorUserId, [FromBody] UpdateCollaboratorRoleRequestDto request)
     {
-        if (noteId == Guid.Empty || collaboratorUserId == Guid.Empty)
+        if (IsInvalid(noteId) || IsInvalid(collaboratorUserId))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний noteId або collaboratorUserId для {MethodName}.", CurrentUserId, nameof(UpdateCollaboratorRole));
+            return InvalidId("noteId або userId");
         }
 
-        if (request == null)
-        {
-            return BadRequest(new { message = "Дані не надано." });
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        var requestingUserId = GetUserId();
-        var updatedCollaborator = await _noteService.UpdateCollaboratorRoleAsync(noteId, collaboratorUserId, request, requestingUserId);
-
+        var updatedCollaborator = await _noteService.UpdateCollaboratorRoleAsync(noteId, collaboratorUserId, request, CurrentUserId);
         if (updatedCollaborator == null)
         {
-            var note = await _noteService.GetNoteByIdAsync(noteId, requestingUserId);
-
-            if (note == null)
-            {
-                return NotFound(new { message = "Нотатку не знайдено." });
-            }
-
-            return BadRequest(new { message = "Не вдалося оновити роль учасника. Перевірте права або дані." });
+            _logger.LogWarning("Користувач {UserId} не зміг оновити роль учасника {CollaboratorUserId} у нотатці {NoteId}.", CurrentUserId, collaboratorUserId, noteId);
+            return Problem(
+                title: "Failed to update collaborator role",
+                detail: "Please check permissions or user data.",
+                statusCode: StatusCodes.Status400BadRequest
+            );
         }
 
         return Ok(updatedCollaborator);
@@ -276,26 +302,24 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Видалити учасника із нотатки.
     /// </summary>
     [HttpDelete("{noteId}/collaborators/{collaboratorUserId}")]
+    [LogOperation("Remove collaborator from note")]
     public async Task<IActionResult> RemoveCollaborator(Guid noteId, Guid collaboratorUserId)
     {
-        if (noteId == Guid.Empty || collaboratorUserId == Guid.Empty)
+        if (IsInvalid(noteId) || IsInvalid(collaboratorUserId))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний noteId або userId для {MethodName}.", CurrentUserId, nameof(RemoveCollaborator));
+            return InvalidId("noteId або userId");
         }
 
-        var requestingUserId = GetUserId();
-        var result = await _noteService.RemoveCollaboratorAsync(noteId, collaboratorUserId, requestingUserId);
-
+        var result = await _noteService.RemoveCollaboratorAsync(noteId, collaboratorUserId, CurrentUserId);
         if (!result)
         {
-            var note = await _noteService.GetNoteByIdAsync(noteId, requestingUserId);
-
-            if (note == null)
-            {
-                return NotFound(new { message = "Нотатку не знайдено." });
-            }
-
-            return BadRequest(new { message = "Не вдалося видалити учасника. Перевірте права або дані." });
+            _logger.LogWarning("Користувач {UserId} не зміг видалити учасника {CollaboratorUserId} з нотатки {NoteId}.", CurrentUserId, collaboratorUserId, noteId);
+            return Problem(
+                title: "Failed to remove collaborator",
+                detail: "Please check permissions or data.",
+                statusCode: StatusCodes.Status400BadRequest
+            );
         }
 
         return NoContent();
@@ -305,19 +329,24 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
     /// Отримати список учасників нотатки.
     /// </summary>
     [HttpGet("{noteId}/collaborators")]
+    [LogOperation("Get note collaborators")]
     public async Task<IActionResult> GetNoteCollaborators(Guid noteId)
     {
-        if (noteId == Guid.Empty)
+        if (IsInvalid(noteId))
         {
-            return BadRequest(new { message = "Недійсний ідентифікатор." });
+            _logger.LogWarning("Користувач {UserId} передав недійсний noteId для {MethodName}.", CurrentUserId, nameof(GetNoteCollaborators));
+            return InvalidId("noteId");
         }
 
-        var requestingUserId = GetUserId();
-        var collaborators = await _noteService.GetNoteCollaboratorsAsync(noteId, requestingUserId);
-
+        var collaborators = await _noteService.GetNoteCollaboratorsAsync(noteId, CurrentUserId);
         if (collaborators == null)
         {
-            return NotFound(new { message = "Нотатку не знайдено або у вас немає доступу до її учасників." });
+            _logger.LogWarning("Користувач {UserId} не має доступу або нотатку {NoteId} не знайдено.", CurrentUserId, noteId);
+            return Problem(
+                title: "Note not found or access denied",
+                detail: "The note was not found or you do not have access to its collaborators.",
+                statusCode: StatusCodes.Status404NotFound
+            );
         }
 
         return Ok(collaborators);
