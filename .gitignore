@@ -2,11 +2,11 @@
 **/bin/
 **/obj/
 
-# User-specific files
+# User-specific files (Visual Studio)
 *.user
 *.suo
 
-# Visual Studio
+# IDE folders
 .vs/
 .vscode/
 
@@ -22,14 +22,9 @@
 **/Migrations/*.Designer.cs
 **/Migrations/*ModelSnapshot.cs
 
-# Node.js (frontend)
+# Frontend
 frontend/node_modules/
-frontend/dist/
 
-# Environment variables
+# Frontend env variables
 frontend/.env
 frontend/.env.*
-
-# OS-specific
-.DS_Store
-Thumbs.db
