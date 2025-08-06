@@ -111,7 +111,7 @@ public static class ServiceCollectionExtensions
             // Додаткові налаштування для підтримки JWT у Swagger
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "Введіть JWT токен у форматі: Bearer {токен}",
+                Description = "Введіть JWT токен",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
                 Type = SecuritySchemeType.Http,
