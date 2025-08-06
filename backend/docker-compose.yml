@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: RootPass!123231
+      MYSQL_DATABASE: lightnotes
+      MYSQL_USER: lightnotes_api_user
+      MYSQL_PASSWORD: L1ghtN0t3s1_Ap1_P@ssw0rd!
+    ports:
+      - "3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+  api:
+    build:
+      context: .
+      dockerfile: LightNotes.API/Dockerfile
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__DefaultConnection=server=db;port=3306;database=lightnotes;uid=lightnotes_api_user;pwd=L1ghtN0t3s1_Ap1_P@ssw0rd!
+    ports:
+      - "5000:80"
+
+volumes:
+  db-data:
