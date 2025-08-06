@@ -40,6 +40,8 @@ if (!app.Environment.IsDevelopment())
             await context.Response.WriteAsync("{\"error\": \"An unexpected error occurred.\"}");
         });
     });
+
+    app.UseHttpsRedirection();
 }
 else
 {
@@ -50,8 +52,6 @@ else
         options.RoutePrefix = string.Empty; // Swagger UI буде доступний за адресою кореня сайту
     });
 }
-
-app.UseHttpsRedirection();
 
 app.UseRouting();
 
