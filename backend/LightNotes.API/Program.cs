@@ -60,7 +60,7 @@ app.UseCors("AllowSpecificOrigin"); // Дозвіл запитів з фронт
 app.UseAuthentication(); // Аутентифікація через JWT
 app.UseAuthorization(); // Перевірка доступу до ресурсів
 
-app.MapHub<NoteChatHub>("/notechathub"); // Маршрут для SignalR чату
+app.MapHub<NoteChatHub>("/api/notechathub"); // Маршрут для SignalR чату
 app.MapControllers(); // Маршрути контролерів
 
 app.Run();
