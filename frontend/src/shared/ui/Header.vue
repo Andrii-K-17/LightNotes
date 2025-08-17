@@ -2,12 +2,12 @@
 import { ref, onMounted, computed } from 'vue'
 import lightThemeIcon from '../../assets/images/lightTheme.svg'
 import darkThemeIcon from '../../assets/images/darkTheme.svg'
-import { useAuthStore } from '../../entities/session/model/store/auth';
+import { useAuthStore } from '../../entities/session/model/store/auth'
 
 const isDark = ref(false)
-const authStore = useAuthStore();
-const isLoggedIn = computed(() => authStore.isAuthenticated);
-const userName = computed(() => authStore.user?.name);
+const authStore = useAuthStore()
+const isLoggedIn = computed(() => authStore.isAuthenticated)
+const userName = computed(() => authStore.user?.name)
 
 const applyTheme = (isDarkTheme: boolean) => {
   if (isDarkTheme) {
@@ -38,7 +38,7 @@ const themeIconSrc = computed(() => {
 <template>
   <header class="bg-neutral-100 text-black p-4 border-b-1 dark:bg-neutral-800 dark:text-white transition duration-500 border-gray-200 dark:border-black flex justify-between items-center">
     <router-link
-      to="/notes"
+      to="/home"
       class="flex items-center gap-2"
     >
       <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8" />
