@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import Spinner from './Spinner.vue'
 
 const props = defineProps<{
   primary?: boolean
   disabled?: boolean
+  loading?: boolean
 }>()
 
 const buttonClasses = computed(() => {
-  const baseStyles = 'px-5 py-2 rounded-lg font-medium transition duration-500'
+  const baseStyles = 'px-5 py-2 rounded-lg font-medium transition duration-500 flex items-center justify-center'
   const stateStyles = {
-    'opacity-50': props.disabled,
+    'pointer-events-none': props.disabled || props.loading,
   }
   const colorStyles = {
     'bg-sky-500 text-white hover:bg-sky-600': props.primary,
@@ -23,9 +25,14 @@ const buttonClasses = computed(() => {
 <template>
   <button
     :class="buttonClasses"
-    :disabled="disabled"
+    :disabled="disabled || loading"
     v-bind="$attrs"
   >
-    <slot />
+    <template v-if="loading">
+      <Spinner class="w-5 h-5"/>
+    </template>
+    <template v-else>
+      <slot />
+    </template>
   </button>
 </template>
