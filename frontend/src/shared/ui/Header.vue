@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import lightThemeIcon from '../../assets/images/lightTheme.svg'
-import darkThemeIcon from '../../assets/images/darkTheme.svg'
+import lightThemeIcon from '../../assets/images/theme/lightTheme.svg'
+import darkThemeIcon from '../../assets/images/theme/darkTheme.svg'
 import { useAuthStore } from '../../entities/session/model/store/auth'
 
 const isDark = ref(false)
@@ -41,7 +41,7 @@ const themeIconSrc = computed(() => {
       to="/home"
       class="flex items-center gap-2"
     >
-      <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8" />
+      <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8 ml-11 md:ml-0 transition-transform duration-300" />
       <span class="font-semibold text-lg">LightNotes</span>
     </router-link>
     
