@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-bg-primary: #f9f6f6; 
+  }
+  .dark {
+    --color-bg-primary: #1f1f1f;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    transition: background-color 0.5s, color 0.5s;
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
