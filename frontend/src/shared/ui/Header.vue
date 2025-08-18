@@ -3,11 +3,15 @@ import { ref, onMounted, computed } from 'vue'
 import lightThemeIcon from '../../assets/images/theme/lightTheme.svg'
 import darkThemeIcon from '../../assets/images/theme/darkTheme.svg'
 import { useAuthStore } from '../../entities/session/model/store/auth'
+import { useUiStore } from '../../app/store/uiStore'
+
+const menuIcon = '/src/assets/images/sidebar/menuIcon.svg'
 
 const isDark = ref(false)
 const authStore = useAuthStore()
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.name)
+const uiStore = useUiStore()
 
 const applyTheme = (isDarkTheme: boolean) => {
   if (isDarkTheme) {
@@ -37,6 +41,15 @@ const themeIconSrc = computed(() => {
 
 <template>
   <header class="bg-neutral-100 text-black p-4 border-b-1 dark:bg-neutral-800 dark:text-white transition duration-500 border-gray-200 dark:border-black flex justify-between items-center">
+    <button
+      @click="uiStore.toggleSidebar"
+      class="md:hidden p-2 absolute top-3 left-3 z-50"
+    >
+      <svg class="w-6 h-6 text-black dark:text-white">
+        <use :href="`${menuIcon}#menu-icon`"></use>
+      </svg>
+    </button>
+    
     <router-link
       to="/home"
       class="flex items-center gap-2"
