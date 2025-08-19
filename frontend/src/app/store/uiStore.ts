@@ -8,8 +8,13 @@ export const useUiStore = defineStore('ui', () => {
     isSidebarOpen.value = !isSidebarOpen.value
   }
 
+  function closeSidebar() {
+    isSidebarOpen.value = false
+  }
+
   return {
     isSidebarOpen,
     toggleSidebar,
+    closeSidebar,
   }
 })
