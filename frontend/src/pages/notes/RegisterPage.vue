@@ -3,7 +3,7 @@ import RegisterForm from '../../entities/session/ui/RegisterForm.vue'
 </script>
 
 <template>
-  <div>
+  <div class="pt-4 pb-4">
     <h1 class="text-3xl font-bold mb-2 text-center dark:text-white">Sign up</h1>
     <p class="text-gray-600 dark:text-gray-300 mb-6 text-center">Create your account to get started.</p>
     
