@@ -44,6 +44,7 @@ const themeIconSrc = computed(() => {
     <button
       @click="uiStore.toggleSidebar"
       class="md:hidden p-2 absolute top-3 left-3 z-50"
+      :class="{'hidden': !authStore.isAuthenticated}"
     >
       <svg class="w-6 h-6 text-black dark:text-white">
         <use :href="`${menuIcon}#menu-icon`"></use>
@@ -52,9 +53,13 @@ const themeIconSrc = computed(() => {
     
     <router-link
       to="/home"
-      class="flex items-center gap-2"
+      class="flex items-center gap-2 md:ml-0"
+      :class="{
+        'ml-0': !authStore.isAuthenticated,
+        'ml-11': authStore.isAuthenticated,
+      }"
     >
-      <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8 ml-11 md:ml-0 transition-transform duration-300" />
+      <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8 transition-transform duration-300" />
       <span class="font-semibold text-lg">LightNotes</span>
     </router-link>
     
