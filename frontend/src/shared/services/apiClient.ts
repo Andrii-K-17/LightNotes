@@ -1,3 +1,5 @@
+import router from '../../app/router'
+import { useAuthStore } from '../../entities/session/model/store/auth'
 import { API_CONFIG } from '../config/api'
 
 /**
@@ -16,6 +18,16 @@ export const apiClient = async <T>(endpoint: string, options?: RequestInit): Pro
     ...options,
     headers,
   })
+
+  // Handle 401 (unauthorized) error to automatically log out the user.
+  if (response.status === 401) {
+    const authStore = useAuthStore()
+    authStore.logout()
+    
+    router.push('/login')
+    
+    throw new Error('Unauthorized: User session has expired.')
+  }
 
   if (!response.ok) {
     const errorData = await response.json()
