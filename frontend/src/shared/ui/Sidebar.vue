@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import BaseButton from './BaseButton.vue'
 import { useAuthStore } from '../../entities/session/model/store/auth'
+import router from '../../app/router'
+import { useUiStore } from '../../app/store/uiStore'
 
 const notesIcon = 'src/assets/images/sidebar/notesIcon.svg'
 const archiveIcon = 'src/assets/images/sidebar/archiveIcon.svg'
@@ -11,6 +13,7 @@ const remindersIcon = 'src/assets/images/sidebar/remindersIcon.svg'
 
 const route = useRoute()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const menuItems = [
   { name: 'Notes', icon: notesIcon, path: '/home' },
@@ -20,15 +23,28 @@ const menuItems = [
 ]
 
 const isActive = (path: string) => computed(() => route.path === path)
+
+const logoutAndCloseSidebar = () => {
+  authStore.logout()
+  uiStore.closeSidebar()
+  router.push('/login')
+}
 </script>
 
 <template>
-  <aside class="bg-[#f9f6f6] dark:bg-[#1f1f1f] p-2 transition-colors duration-500 rounded-lg">
+  <aside
+    class="bg-[#f9f6f6] dark:bg-[#1f1f1f] p-2 transition-all duration-300 rounded-lg h-full w-64 z-30 fixed left-0 md:static md:translate-x-0 pr-4 pl-4"
+    :class="{
+      'translate-x-0 w-full': uiStore.isSidebarOpen,
+      '-translate-x-full': !uiStore.isSidebarOpen,
+    }"
+  >
     <nav class="flex flex-col space-y-2">
       <router-link
         v-for="item in menuItems"
         :key="item.name"
         :to="item.path"
+        @click="uiStore.closeSidebar"
         class="flex items-center gap-2 p-2 rounded-lg transition-colors duration-300"
         :class="{
           'bg-sky-200 dark:bg-sky-950 dark:text-neutral-100 border border-neutral-400 dark:border-neutral-300': isActive(item.path).value,
@@ -42,11 +58,11 @@ const isActive = (path: string) => computed(() => route.path === path)
       </router-link>
       <hr class="mt-1 mb-3 text-neutral-300"/>
       <BaseButton
-          @click="authStore.logout"
-          :loading="authStore.loading"
-          class="w-full h-10"
-        >
-          Log out
+        @click="logoutAndCloseSidebar"
+        :loading="authStore.loading"
+        class="w-full h-10"
+      >
+        Log out
       </BaseButton>
     </nav>
   </aside>
