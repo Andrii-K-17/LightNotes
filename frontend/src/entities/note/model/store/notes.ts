@@ -83,8 +83,8 @@ export const useNotesStore = defineStore('notes', () => {
    * Archives a note and removes it from the state.
    */
   async function archiveNote(id: string) {
-    const success = await handleApiCall(() => notesService.archiveNote(id))
-    if (success) {
+    const result = await handleApiCall(() => notesService.archiveNote(id))
+    if (result !== null) {
       notes.value = notes.value.filter(note => note.id !== id)
     }
   }
@@ -103,8 +103,8 @@ export const useNotesStore = defineStore('notes', () => {
    * Permanently deletes a note and removes it from the state.
    */
   async function deleteNotePermanently(id: string) {
-    const success = await handleApiCall(() => notesService.deleteNotePermanently(id))
-    if (success) {
+    const result = await handleApiCall(() => notesService.deleteNotePermanently(id))
+    if (result !== null) {
       notes.value = notes.value.filter(note => note.id !== id)
     }
   }
@@ -142,8 +142,8 @@ export const useNotesStore = defineStore('notes', () => {
    * Removes a collaborator.
    */
   async function removeCollaborator(noteId: string, collaboratorUserId: string) {
-    const success = await handleApiCall(() => notesService.removeCollaborator(noteId, collaboratorUserId))
-    if (success) {
+    const result = await handleApiCall(() => notesService.removeCollaborator(noteId, collaboratorUserId))
+    if (result !== null) {
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
         note.collaborators = note.collaborators.filter(c => c.id !== collaboratorUserId)
