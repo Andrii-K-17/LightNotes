@@ -210,7 +210,7 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
 
         await NotifyClientsAsync(id, "NoteRestored", $"Нотатку \"{note.Title}\" відновлено.");
 
-        return NoContent();
+        return Ok(note);
     }
 
     /// <summary>
