@@ -57,8 +57,8 @@ export const notesService = {
   /**
    * Restores an archived note.
    */
-  async restoreNote(id: string) {
-    await apiClient(`/Notes/${id}/restore`, {
+  async restoreNote(id: string): Promise<NoteResponseDto> {
+    return await apiClient(`/Notes/${id}/restore`, {
       method: 'POST',
     })
   },
