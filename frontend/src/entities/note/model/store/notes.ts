@@ -20,15 +20,31 @@ export const useNotesStore = defineStore('notes', () => {
   const sortedNotes = computed(() => {
     return [...notes.value].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
   })
-  
+
   /**
-   * Manages API request state for all async actions.
-   */ 
-  async function handleApiCall<T>(apiCall: () => Promise<T>): Promise<T | null> {
+   * Fetches all notes and populates the state.
+   */
+  async function fetchNotes() {
     loading.value = true
     error.value = null
     try {
-      return await apiCall()
+      const data = await notesService.fetchAllNotes()
+      notes.value = data
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Fetches a single note by ID.
+   */
+  async function fetchNoteById(id: string) {
+    loading.value = true
+    error.value = null
+    try {
+      return await notesService.fetchNoteById(id)
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
       return null
@@ -38,44 +54,39 @@ export const useNotesStore = defineStore('notes', () => {
   }
 
   /**
-   * Fetches all notes and populates the state.
-   */
-  async function fetchNotes() {
-    const data = await handleApiCall(() => notesService.fetchAllNotes())
-    if (data) {
-      notes.value = data
-    }
-  }
-
-  /**
-   * Fetches a single note by ID.
-   */
-  async function fetchNoteById(id: string) {
-    return await handleApiCall(() => notesService.fetchNoteById(id))
-  }
-
-  /**
    * Creates a new note and adds it to the state.
    */
   async function createNote(payload: NoteRequestDto) {
-    const created = await handleApiCall(() => notesService.createNote(payload))
-    if (created) {
+    loading.value = true
+    error.value = null
+    try {
+      const created = await notesService.createNote(payload)
       notes.value.unshift(created)
       return created
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+      throw err
+    } finally {
+      loading.value = false
     }
-    return null
   }
 
   /**
    * Updates a note in the state.
    */
   async function updateNote(id: string, payload: NoteRequestDto) {
-    const updated = await handleApiCall(() => notesService.updateNote(id, payload))
-    if (updated) {
+    loading.value = true
+    error.value = null
+    try {
+      const updated = await notesService.updateNote(id, payload)
       const index = notes.value.findIndex(note => note.id === updated.id)
       if (index !== -1) {
         notes.value[index] = updated
       }
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
     }
   }
 
@@ -83,9 +94,15 @@ export const useNotesStore = defineStore('notes', () => {
    * Archives a note and removes it from the state.
    */
   async function archiveNote(id: string) {
-    const result = await handleApiCall(() => notesService.archiveNote(id))
-    if (result !== null) {
+    loading.value = true
+    error.value = null
+    try {
+      await notesService.archiveNote(id)
       notes.value = notes.value.filter(note => note.id !== id)
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
     }
   }
 
@@ -93,9 +110,15 @@ export const useNotesStore = defineStore('notes', () => {
    * Restores an archived note and adds it to the state.
    */
   async function restoreNote(id: string) {
-    const restoredNote = await handleApiCall(() => notesService.restoreNote(id))
-    if (restoredNote) {
-      notes.value.unshift(restoredNote)
+    loading.value = true
+    error.value = null
+    try {
+      await notesService.restoreNote(id)
+      await fetchNotes() // Re-fetch to update the list
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
     }
   }
 
@@ -103,9 +126,15 @@ export const useNotesStore = defineStore('notes', () => {
    * Permanently deletes a note and removes it from the state.
    */
   async function deleteNotePermanently(id: string) {
-    const result = await handleApiCall(() => notesService.deleteNotePermanently(id))
-    if (result !== null) {
+    loading.value = true
+    error.value = null
+    try {
+      await notesService.deleteNotePermanently(id)
       notes.value = notes.value.filter(note => note.id !== id)
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
     }
   }
 
@@ -113,12 +142,18 @@ export const useNotesStore = defineStore('notes', () => {
    * Adds a collaborator to a note.
    */
   async function addCollaborator(noteId: string, payload: AddCollaboratorRequestDto) {
-    const newCollaborator = await handleApiCall(() => notesService.addCollaborator(noteId, payload))
-    if (newCollaborator) {
+    loading.value = true
+    error.value = null
+    try {
+      const newCollaborator = await notesService.addCollaborator(noteId, payload)
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
         note.collaborators.push(newCollaborator) 
       }
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
     }
   }
 
@@ -126,8 +161,10 @@ export const useNotesStore = defineStore('notes', () => {
    * Updates a collaborator's role.
    */
   async function updateCollaboratorRole(noteId: string, collaboratorUserId: string, payload: UpdateCollaboratorRoleRequestDto) {
-    const updatedCollaborator = await handleApiCall(() => notesService.updateCollaboratorRole(noteId, collaboratorUserId, payload))
-    if (updatedCollaborator) {
+    loading.value = true
+    error.value = null
+    try {
+      const updatedCollaborator = await notesService.updateCollaboratorRole(noteId, collaboratorUserId, payload)
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
         const collaboratorIndex = note.collaborators.findIndex(c => c.id === updatedCollaborator.id)
@@ -135,6 +172,10 @@ export const useNotesStore = defineStore('notes', () => {
           note.collaborators[collaboratorIndex] = updatedCollaborator
         }
       }
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
     }
   }
 
@@ -142,20 +183,35 @@ export const useNotesStore = defineStore('notes', () => {
    * Removes a collaborator.
    */
   async function removeCollaborator(noteId: string, collaboratorUserId: string) {
-    const result = await handleApiCall(() => notesService.removeCollaborator(noteId, collaboratorUserId))
-    if (result !== null) {
+    loading.value = true
+    error.value = null
+    try {
+      await notesService.removeCollaborator(noteId, collaboratorUserId)
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
         note.collaborators = note.collaborators.filter(c => c.id !== collaboratorUserId)
       }
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+    } finally {
+      loading.value = false
     }
   }
-  
+
   /**
    * Fetches all collaborators for a note.
    */
   async function fetchCollaborators(noteId: string) {
-    return await handleApiCall(() => notesService.fetchCollaborators(noteId))
+    loading.value = true
+    error.value = null
+    try {
+      return await notesService.fetchCollaborators(noteId)
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
+      return null
+    } finally {
+      loading.value = false
+    }
   }
 
   return {
