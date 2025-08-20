@@ -5,7 +5,7 @@ import { API_CONFIG } from '../config/api'
 /**
  * A basic HTTP client for executing requests to the API.
  */
-export const apiClient = async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
+export const apiClient = async <T>(endpoint: string, options?: RequestInit): Promise<T | null> => {
   const token = localStorage.getItem('authToken')
 
   const headers: HeadersInit = {
@@ -33,6 +33,11 @@ export const apiClient = async <T>(endpoint: string, options?: RequestInit): Pro
     const errorData = await response.json()
     const errorMessage = errorData.detail || errorData.title || 'An error occurred during the request.'
     throw new Error(errorMessage)
+  }
+
+  // Handle successful requests with no content
+  if (response.status === 204) {
+    return null
   }
 
   return response.json()
