@@ -5,6 +5,7 @@ import RegisterPage from '../../pages/notes/RegisterPage.vue'
 import PrivacyPolicyPage from '../../pages/info/PrivacyPolicyPage.vue'
 import TermsOfUsePage from '../../pages/info/TermsOfUsePage.vue'
 import { useAuthStore } from '../../entities/session/model/store/auth'
+import NoteDetailsPage from '../../pages/notes/NoteDetailsPage.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/home' },
@@ -13,6 +14,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/register', component: RegisterPage },
   { path: '/privacy-policy', component: PrivacyPolicyPage },
   { path: '/terms-of-use', component: TermsOfUsePage },
+  { path: '/note/:id', name: 'note-details', component: NoteDetailsPage },
 ]
 
 const router = createRouter({
@@ -21,14 +23,14 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const auth = useAuthStore();
+  const auth = useAuthStore()
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return '/login'
   }
 
   if (auth.isAuthenticated && (to.path === '/login' || to.path === '/register')) {
-    return '/home';
+    return '/home'
   }
 })
 
