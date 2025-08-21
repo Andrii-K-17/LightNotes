@@ -13,6 +13,12 @@
     color: var(--color-text-primary);
     transition: background-color 0.5s, color 0.5s;
   }
+  .custom-scrollbar {
+    scrollbar-color: #93979e #f9f6f6;
+  }
+  .dark .custom-scrollbar {
+    scrollbar-color: #d4d6e7 #1f1f1f;
+  }
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
