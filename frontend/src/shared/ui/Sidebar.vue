@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import BaseButton from './BaseButton.vue'
 import { useAuthStore } from '../../entities/session/model/store/auth'
@@ -7,7 +6,6 @@ import router from '../../app/router'
 import { useUiStore } from '../../app/store/uiStore'
 
 const notesIcon = 'src/assets/images/sidebar/notesIcon.svg'
-const archiveIcon = 'src/assets/images/sidebar/archiveIcon.svg'
 const trashIcon = 'src/assets/images/sidebar/trashIcon.svg'
 const remindersIcon = 'src/assets/images/sidebar/remindersIcon.svg'
 
@@ -17,12 +15,11 @@ const uiStore = useUiStore()
 
 const menuItems = [
   { name: 'Notes', icon: notesIcon, path: '/home' },
-  { name: 'Archive', icon: archiveIcon, path: '/archive' },
-  { name: 'Trash', icon: trashIcon, path: '/trash' },
   { name: 'Reminders', icon: remindersIcon, path: '/reminders' },
+  { name: 'Trash', icon: trashIcon, path: '/trash' },
 ]
 
-const isActive = (path: string) => computed(() => route.path === path)
+const isActive = (path: string) => route.path === path
 
 const logoutAndCloseSidebar = () => {
   authStore.logout()
@@ -47,8 +44,8 @@ const logoutAndCloseSidebar = () => {
         @click="uiStore.closeSidebar"
         class="flex items-center gap-2 p-2 rounded-lg transition-colors duration-300"
         :class="{
-          'bg-sky-200 dark:bg-sky-950 dark:text-neutral-100 border border-neutral-400 dark:border-neutral-300': isActive(item.path).value,
-          'bg-gray-200 dark:bg-[#2b2b2b] dark:text-neutral-100 border border-neutral-100 dark:border-neutral-800 hover:border-sky-600': !isActive(item.path).value,
+          'bg-sky-200 dark:bg-sky-950 dark:text-neutral-100 border border-neutral-400 dark:border-neutral-300': isActive(item.path),
+          'bg-gray-200 dark:bg-[#2b2b2b] dark:text-neutral-100 border border-neutral-100 dark:border-neutral-800 hover:border-sky-600': !isActive(item.path),
         }"
       >
         <svg class="w-7 h-7 text-black dark:text-white">
