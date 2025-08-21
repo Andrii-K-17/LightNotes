@@ -18,8 +18,11 @@ export const useNotesStore = defineStore('notes', () => {
 
   const hasNotes = computed(() => notes.value.length > 0)
 
+  const nonArchivedNotes = computed(() => {
+    return notes.value.filter(note => !note.isArchived)
+  })
   const sortedNotes = computed(() => {
-    return [...notes.value].sort((a, b) => {
+    return [...nonArchivedNotes.value].sort((a, b) => {
       if (a.isPinned && !b.isPinned) {
         return -1
       }
