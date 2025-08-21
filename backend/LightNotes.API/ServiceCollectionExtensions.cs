@@ -52,7 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddCors(options =>
         {
             options.AddPolicy("AllowSpecificOrigin", builder =>
-                builder.WithOrigins("http://localhost:3000", "http://127.0.0.1:5500")
+                builder.WithOrigins("http://localhost:3000", "http://localhost:5173")
                        .AllowAnyHeader()
                        .AllowAnyMethod()
                        .AllowCredentials()); // дозволити надсилати куки або токени
@@ -78,6 +78,24 @@ public static class ServiceCollectionExtensions
                         ValidIssuer = config["Jwt:Issuer"],
                         ValidAudience = config["Jwt:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Secret"]!))
+                    };
+
+                    // Конфігурація подій для JWT Bearer аутентифікації
+                    // дозволяє SignalR аутентифікації працювати, коли токен передається в URL, а не в заголовку, уникаючи помилки Unauthorized
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/notechathub"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 
