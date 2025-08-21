@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { formatDate } from '../../../shared/lib/helpers'
 import type { NoteResponseDto } from '../../note/model/types'
 import { truncateText } from '../../../shared/lib/helpers'
 import router from '../../../app/router'
 import { useRoute } from 'vue-router'
 import { useUiStore } from '../../../app/store/uiStore'
+import Message from '../../../shared/ui/Message.vue'
 
 const pinIcon = 'src/assets/images/noteCard/pinIcon.svg'
 const archiveIcon = 'src/assets/images/noteCard/archiveIcon.svg'
@@ -25,6 +26,15 @@ const isActive = (path: string) => route.path === path
 const truncatedContent = computed(() => {
   return truncateText(props.note.content, 200)
 })
+
+const messageText = ref('')
+
+const showMessage = (message: string, time: number = 3000) => {
+   messageText.value = message
+  setTimeout(() => {
+    messageText.value = '' 
+  }, time)
+} 
 
 const handleNoteAction = (action: 'pin' | 'archive' | 'delete' | 'restore', event: Event) => {
   event.stopPropagation()
@@ -50,17 +60,18 @@ const cardStyle = computed(() => {
     }
   }
   return undefined
-}) 
+})
 </script>
 
 <template>
+  <Message v-if="messageText" :message="messageText" />
   <div
     class="border border-neutral-400 dark:border-neutral-100 hover:border-sky-600 rounded-lg p-4 space-y-2 transition-all duration-300 cursor-pointer flex flex-col justify-between"
     :class="{ 
       'bg-neutral-100 dark:bg-neutral-800': !props.note.color
     }"
     :style="props.note.color ? cardStyle : {}"
-    @click="router.push(`/note/${props.note.id}`)"
+    @click="isActive('/home') || isActive('/reminders') ? router.push(`/note/${props.note.id}`) : showMessage('Notes in the trash cannot be edited.')"
   >
   <div>
       <h2 class="text-lg font-semibold mb-2 line-clamp-2 dark:text-neutral-50">
