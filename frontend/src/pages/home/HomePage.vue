@@ -24,7 +24,7 @@ const createNoteAndRedirect = async () => {
   })
   
   if (newNote) {
-    router.push({ name: 'note-details', params: { id: newNote.id } })
+    router.push(`/note/${newNote.id}`)
   }
 }
 </script>
@@ -46,20 +46,25 @@ const createNoteAndRedirect = async () => {
       <main
         class="pb-2 pt-2"
       >
-        <div v-if="notesStore.loading">
+        <div v-if="notesStore.loading" class="flex items-center justify-center dark:text-neutral-100">
           <p>Loading notes...</p>
         </div>
       
-        <div v-else-if="!notesStore.hasNotes">
+        <div v-else-if="!notesStore.hasNotes" class="flex flex-col items-center justify-center dark:text-neutral-100">
           <p>You don't have any notes yet.</p>
           <p>Create your first note.</p>
         </div>
       
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          <NoteCard 
+          <NoteCard
             v-for="note in notesStore.sortedNotes" 
-            :key="note.id" 
-            :note="note" 
+            :key="note.id"
+            :note="note"
+            @pin="notesStore.updateNote(note.id, {
+              ...note,
+              isPinned: !note.isPinned
+            })"
+            @archive="notesStore.archiveNote(note.id)"
           />
         </div>
       
