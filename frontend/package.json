@@ -13,12 +13,14 @@
     "@heroicons/vue": "^2.2.0",
     "@microsoft/signalr": "^9.0.6",
     "@tailwindcss/vite": "^4.1.11",
+    "lodash": "^4.17.21",
     "pinia": "^3.0.3",
     "tailwindcss": "^4.1.11",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.20",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
