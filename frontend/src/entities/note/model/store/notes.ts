@@ -17,6 +17,7 @@ export const useNotesStore = defineStore('notes', () => {
   const error = ref<string | null>(null)
 
   const hasNotes = computed(() => notes.value.length > 0)
+
   const sortedNotes = computed(() => {
     return [...notes.value].sort((a, b) => {
       if (a.isPinned && !b.isPinned) {
@@ -29,6 +30,17 @@ export const useNotesStore = defineStore('notes', () => {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     })
   })
+
+  const archivedNotes = computed(() => {
+    return notes.value.filter(note => note.isArchived)
+  })
+
+  const reminderNotes = computed(() => {
+    return notes.value.filter(note => note.reminderAt && new Date(note.reminderAt) > new Date())
+  })
+
+  const hasArchivedNotes = computed(() => archivedNotes.value.length > 0)
+  const hasReminderNotes = computed(() => reminderNotes.value.length > 0)
 
   /**
    * Fetches all notes and populates the state.
@@ -133,7 +145,12 @@ export const useNotesStore = defineStore('notes', () => {
       if (!restoredNote) {
         throw new Error('Failed to restore note: no response received.')
       }
-      notes.value.push(restoredNote)
+      const index = notes.value.findIndex(note => note.id === restoredNote.id)
+      if (index !== -1) {
+        notes.value[index] = restoredNote
+      } else {
+        notes.value.push(restoredNote)
+      }
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
     } finally {
@@ -244,7 +261,11 @@ export const useNotesStore = defineStore('notes', () => {
     loading,
     error,
     hasNotes,
+    hasArchivedNotes,
+    hasReminderNotes,
     sortedNotes,
+    archivedNotes,
+    reminderNotes,
     fetchNotes,
     fetchNoteById,
     createNote,
