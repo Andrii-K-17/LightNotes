@@ -61,8 +61,12 @@ export const useNotesStore = defineStore('notes', () => {
     error.value = null
     try {
       const created = await notesService.createNote(payload)
-      notes.value.unshift(created)
-      return created
+      if (created) {
+        notes.value.unshift(created)
+        return created
+      } else {
+        throw new Error('Failed to create note: no response received.')
+      }
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
       throw err
@@ -79,6 +83,9 @@ export const useNotesStore = defineStore('notes', () => {
     error.value = null
     try {
       const updated = await notesService.updateNote(id, payload)
+      if (!updated) {
+        throw new Error('Failed to update note: no response received.')
+      }
       const index = notes.value.findIndex(note => note.id === updated.id)
       if (index !== -1) {
         notes.value[index] = updated
@@ -113,8 +120,11 @@ export const useNotesStore = defineStore('notes', () => {
     loading.value = true
     error.value = null
     try {
-      await notesService.restoreNote(id)
-      await fetchNotes() // Re-fetch to update the list
+      const restoredNote = await notesService.restoreNote(id)
+      if (!restoredNote) {
+        throw new Error('Failed to restore note: no response received.')
+      }
+      notes.value.push(restoredNote)
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
     } finally {
@@ -146,6 +156,9 @@ export const useNotesStore = defineStore('notes', () => {
     error.value = null
     try {
       const newCollaborator = await notesService.addCollaborator(noteId, payload)
+      if (!newCollaborator) {
+        throw new Error('Failed to add collaborator: no response received.')
+      }
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
         note.collaborators.push(newCollaborator) 
@@ -165,6 +178,9 @@ export const useNotesStore = defineStore('notes', () => {
     error.value = null
     try {
       const updatedCollaborator = await notesService.updateCollaboratorRole(noteId, collaboratorUserId, payload)
+      if (!updatedCollaborator) {
+        throw new Error('Failed to update collaborator: no response received.')
+      }
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
         const collaboratorIndex = note.collaborators.findIndex(c => c.id === updatedCollaborator.id)
