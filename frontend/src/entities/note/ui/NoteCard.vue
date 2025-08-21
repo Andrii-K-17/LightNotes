@@ -5,6 +5,7 @@ import type { NoteResponseDto } from '../../note/model/types'
 import { truncateText } from '../../../shared/lib/helpers'
 import router from '../../../app/router'
 import { useRoute } from 'vue-router'
+import { useUiStore } from '../../../app/store/uiStore'
 
 const pinIcon = 'src/assets/images/noteCard/pinIcon.svg'
 const archiveIcon = 'src/assets/images/noteCard/archiveIcon.svg'
@@ -29,6 +30,27 @@ const handleNoteAction = (action: 'pin' | 'archive' | 'delete' | 'restore', even
   event.stopPropagation()
   emit(action, props.note.id)
 }
+
+const uiStore = useUiStore()
+
+const colors: { [key: string]: string } = {
+  '#e3f2fd': '#13527e',
+  '#f3e5f5': '#57225f',
+  '#fce4ec': '#6b2a40',
+  '#e8f5e9': '#1a5b1f',
+  '#fffde7': '#69631b',
+}
+
+const cardStyle = computed(() => {
+  if (props.note.color) {
+    if (uiStore.isDark && props.note.color in colors) {
+      return { backgroundColor: colors[props.note.color] } 
+    } else {
+      return { backgroundColor: props.note.color } 
+    }
+  }
+  return undefined
+}) 
 </script>
 
 <template>
@@ -37,7 +59,7 @@ const handleNoteAction = (action: 'pin' | 'archive' | 'delete' | 'restore', even
     :class="{ 
       'bg-neutral-100 dark:bg-neutral-800': !props.note.color
     }"
-    :style="props.note.color ? { backgroundColor: props.note.color } : {}"
+    :style="props.note.color ? cardStyle : {}"
     @click="router.push(`/note/${props.note.id}`)"
   >
   <div>
