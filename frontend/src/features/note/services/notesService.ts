@@ -15,20 +15,21 @@ export const notesService = {
    * Gets all notes of the current user.
    */
   async fetchAllNotes(): Promise<NoteResponseDto[]> {
-    return apiClient<NoteResponseDto[]>('/Notes')
+    const notes = await apiClient<NoteResponseDto[]>('/Notes')
+    return notes ?? []
   },
 
   /**
    * Gets a note by its id.
    */
-  async fetchNoteById(id: string): Promise<NoteResponseDto> {
+  async fetchNoteById(id: string): Promise<NoteResponseDto | null> {
     return apiClient<NoteResponseDto>(`/Notes/${id}`)
   },
 
   /**
    * Creates a new note.
    */
-  async createNote(payload: NoteRequestDto): Promise<NoteResponseDto> {
+  async createNote(payload: NoteRequestDto): Promise<NoteResponseDto | null> {
     return apiClient<NoteResponseDto>('/Notes', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -38,7 +39,7 @@ export const notesService = {
   /**
    * Updates an existing note.
    */
-  async updateNote(id: string, payload: NoteRequestDto): Promise<NoteResponseDto> {
+  async updateNote(id: string, payload: NoteRequestDto): Promise<NoteResponseDto | null> {
     return apiClient<NoteResponseDto>(`/Notes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
@@ -57,7 +58,7 @@ export const notesService = {
   /**
    * Restores an archived note.
    */
-  async restoreNote(id: string): Promise<NoteResponseDto> {
+  async restoreNote(id: string): Promise<NoteResponseDto | null> {
     return await apiClient(`/Notes/${id}/restore`, {
       method: 'POST',
     })
@@ -75,7 +76,7 @@ export const notesService = {
   /**
    * Adds a new collaborator to a specific note.
    */
-  async addCollaborator(noteId: string, payload: AddCollaboratorRequestDto): Promise<NoteCollaboratorDto> {
+  async addCollaborator(noteId: string, payload: AddCollaboratorRequestDto): Promise<NoteCollaboratorDto | null> {
     return apiClient<NoteCollaboratorDto>(`/Notes/${noteId}/collaborators`, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -85,7 +86,7 @@ export const notesService = {
   /**
    * Updates the role of an existing collaborator.
    */
-  async updateCollaboratorRole(noteId: string, collaboratorUserId: string, payload: UpdateCollaboratorRoleRequestDto): Promise<NoteCollaboratorDto> {
+  async updateCollaboratorRole(noteId: string, collaboratorUserId: string, payload: UpdateCollaboratorRoleRequestDto): Promise<NoteCollaboratorDto | null> {
     return apiClient<NoteCollaboratorDto>(`/Notes/${noteId}/collaborators/${collaboratorUserId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
@@ -105,6 +106,7 @@ export const notesService = {
    * Gets the list of collaborators for a specific note.
    */
   async fetchCollaborators(noteId: string): Promise<NoteCollaboratorDto[]> {
-    return apiClient<NoteCollaboratorDto[]>(`/Notes/${noteId}/collaborators`)
+    const response = await apiClient<NoteCollaboratorDto[]>(`/Notes/${noteId}/collaborators`)
+    return response ?? []
   },
 }
