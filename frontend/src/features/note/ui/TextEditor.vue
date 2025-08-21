@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits(['update:modelValue'])
@@ -14,6 +14,15 @@ const handleInput = () => {
     emit('update:modelValue', editorRef.value.innerHTML)
   }
 }
+
+/**
+ * Sets the initial content.
+ */
+onMounted(() => {
+  if (editorRef.value && props.modelValue) {
+    editorRef.value.innerHTML = props.modelValue
+  }
+})
 
 /**
  * Watches for changes in the modelValue prop to synchronize with the editor's content.
