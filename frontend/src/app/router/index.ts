@@ -6,15 +6,19 @@ import PrivacyPolicyPage from '../../pages/info/PrivacyPolicyPage.vue'
 import TermsOfUsePage from '../../pages/info/TermsOfUsePage.vue'
 import { useAuthStore } from '../../entities/session/model/store/auth'
 import NoteDetailsPage from '../../pages/notes/NoteDetailsPage.vue'
+import TrashPage from '../../pages/notes/TrashPage.vue'
+import RemindersPage from '../../pages/notes/RemindersPage.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/home' },
   { path: '/home', component: NotesPage, meta: { requiresAuth: true } },
+  { path: '/trash', component: TrashPage, meta: { requiresAuth: true } },
+  { path: '/reminders', component: RemindersPage, meta: { requiresAuth: true } },
   { path: '/login', component: LoginPage },
   { path: '/register', component: RegisterPage },
   { path: '/privacy-policy', component: PrivacyPolicyPage },
   { path: '/terms-of-use', component: TermsOfUsePage },
-  { path: '/note/:id', name: 'note-details', component: NoteDetailsPage },
+  { path: '/note/:id', component: NoteDetailsPage, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
