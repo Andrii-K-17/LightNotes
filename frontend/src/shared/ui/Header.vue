@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { onMounted, computed } from 'vue'
 import lightThemeIcon from '../../assets/images/theme/lightTheme.svg'
 import darkThemeIcon from '../../assets/images/theme/darkTheme.svg'
 import { useAuthStore } from '../../entities/session/model/store/auth'
@@ -7,35 +7,18 @@ import { useUiStore } from '../../app/store/uiStore'
 
 const menuIcon = '/src/assets/images/sidebar/menuIcon.svg'
 
-const isDark = ref(false)
 const authStore = useAuthStore()
-const isLoggedIn = computed(() => authStore.isAuthenticated)
-const userName = computed(() => authStore.user?.name)
 const uiStore = useUiStore()
 
-const applyTheme = (isDarkTheme: boolean) => {
-  if (isDarkTheme) {
-    document.documentElement.classList.add('dark')
-    localStorage.setItem('theme', 'dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-    localStorage.removeItem('theme')
-  }
-}
-
-onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
-  isDark.value = savedTheme === 'dark'
-  applyTheme(isDark.value)
-})
-
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  applyTheme(isDark.value)
-}
+const isLoggedIn = computed(() => authStore.isAuthenticated)
+const userName = computed(() => authStore.user?.name)
 
 const themeIconSrc = computed(() => {
-  return isDark.value ? darkThemeIcon : lightThemeIcon
+  return uiStore.isDark ? darkThemeIcon : lightThemeIcon
+})
+
+onMounted(() => {
+  uiStore.initTheme()
 })
 </script>
 
@@ -65,13 +48,13 @@ const themeIconSrc = computed(() => {
     
     <div class="flex justify-end gap-7">
       <button
-        @click="toggleTheme"
+        @click="uiStore.toggleTheme"
         class="flex items-center justify-center rounded-full"
       >
         <img
           :src="themeIconSrc"
           alt="Theme toggle"
-          class="w-5 h-5"
+          class="w-5 h-5" 
         />
       </button>
 
@@ -83,7 +66,7 @@ const themeIconSrc = computed(() => {
       <div v-else>
         <router-link
           to="/login"
-          class="px-5 py-2 rounded-lg font-medium transition duration-500  bg-sky-500 text-white hover:bg-sky-600"
+          class="px-5 py-2 rounded-lg font-medium transition duration-500 bg-sky-500 text-white hover:bg-sky-600"
         >
           Sing in
         </router-link>
