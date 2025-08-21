@@ -18,7 +18,16 @@ export const useNotesStore = defineStore('notes', () => {
 
   const hasNotes = computed(() => notes.value.length > 0)
   const sortedNotes = computed(() => {
-    return [...notes.value].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    return [...notes.value].sort((a, b) => {
+      if (a.isPinned && !b.isPinned) {
+        return -1
+      }
+      if (!a.isPinned && b.isPinned) {
+        return 1
+      }
+      
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    })
   })
 
   /**
