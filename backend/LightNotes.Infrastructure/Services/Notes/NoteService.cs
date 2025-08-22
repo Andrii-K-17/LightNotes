@@ -36,7 +36,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
 
         if (isOwner)
         {
-            return Role.Owner;
+            return Role.Admin;
         }
 
         // Якщо не власник, перевіряємо, чи є він учасником
@@ -56,7 +56,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
     private async Task<bool> IsUserNoteOwnerAsync(Guid noteId, Guid userId)
     {
         var role = await GetUserNoteRoleAsync(noteId, userId);
-        return role == Role.Owner;
+        return role == Role.Admin;
     }
 
 
@@ -187,7 +187,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         _logger.LogInformation("Спроба оновлення нотатки ID: {NoteId} користувачем ID: {UserId}", noteId, userId);
         // Перевіряємо роль користувача. Дозволено оновлювати лише Власнику або Редактору
         var userRole = await GetUserNoteRoleAsync(noteId, userId);
-        if (userRole == null || (userRole != Role.Owner && userRole != Role.Editor))
+        if (userRole == null || (userRole != Role.Admin && userRole != Role.Editor))
         {
             _logger.LogWarning("Користувач ID: {UserId} не має прав на оновлення нотатки ID: {NoteId}. Роль: {Role}", userId, noteId, userRole);
             return null; // Користувач не має достатніх прав
@@ -317,7 +317,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         _logger.LogInformation("Спроба повного видалення нотатки ID: {NoteId} користувачем ID: {UserId}", noteId, userId);
 
         var userRole = await GetUserNoteRoleAsync(noteId, userId);
-        if (userRole != Role.Owner)
+        if (userRole != Role.Admin)
         {
             _logger.LogWarning("Користувач не має прав на повне видалення нотатки ID: {NoteId}. Роль: {Role}", noteId, userRole);
             return false;
@@ -390,7 +390,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         }
 
         // Заборона призначення ролі Owner
-        if (request.Role == Role.Owner)
+        if (request.Role == Role.Admin)
         {
             _logger.LogWarning("Спроба призначити роль Owner через додавання учасника до нотатки ID: {NoteId}.", noteId);
             return null;
@@ -451,7 +451,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         }
 
         // Перевірка, чи нова роль є дійсною (не можна призначити роль Owner через цей метод)
-        if (request.NewRole == Role.Owner)
+        if (request.NewRole == Role.Admin)
         {
             _logger.LogWarning("Спроба призначити роль Owner через оновлення ролі для учасника ID: {CollaboratorUserId} в нотатці ID: {NoteId}.", collaboratorUserId, noteId);
             return null;

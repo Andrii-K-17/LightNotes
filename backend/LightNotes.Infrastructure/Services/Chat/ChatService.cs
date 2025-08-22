@@ -36,7 +36,7 @@ public class ChatService(ApplicationDbContext context, IMapper mapper, ILogger<C
 
         if (isOwner)
         {
-            return Role.Owner;
+            return Role.Admin;
         }
 
         // Якщо не власник, перевіряємо, чи є він учасником

@@ -38,7 +38,7 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
         var userId = GetUserId();
 
         var note = await _noteService.GetNoteByIdAsync(noteId, userId)
-            ?? throw new HubException("У вас немає доступу до цієї замітки.");
+            ?? throw new HubException("У вас немає доступу до цієї нотатки.");
 
         await Groups.AddToGroupAsync(Context.ConnectionId, noteId.ToString());
     }
@@ -65,7 +65,7 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
         var senderId = GetUserId();
 
         var note = await _noteService.GetNoteByIdAsync(noteId, senderId)
-            ?? throw new HubException("У вас немає доступу до цієї замітки.");
+            ?? throw new HubException("У вас немає доступу до цієї нотатки.");
 
         var message = await _chatService.SaveMessageAsync(noteId, senderId, request);
         await Clients.Group(noteId.ToString()).SendAsync("ReceiveMessage", message);
@@ -97,7 +97,7 @@ public class NoteChatHub(IChatService chatService, INoteService noteService) : H
         var userId = GetUserId();
 
         var history = await _chatService.GetChatHistoryAsync(noteId, userId)
-            ?? throw new HubException("У вас немає доступу до історії чату цієї замітки.");
+            ?? throw new HubException("У вас немає доступу до історії чату цієї нотатки.");
 
         await Clients.Caller.SendAsync("ReceiveChatHistory", history);
     }

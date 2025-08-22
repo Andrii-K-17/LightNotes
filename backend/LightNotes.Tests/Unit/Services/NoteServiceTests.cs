@@ -373,7 +373,7 @@ public class NoteServiceTests
             _mockMapper.Setup(m => m.Map<List<NoteCollaboratorDto>>(It.IsAny<List<NoteCollaborator>>()))
                        .Returns(
                        [
-                           new() { UserId = owner.Id, Role = Role.Owner }
+                           new() { UserId = owner.Id, Role = Role.Admin }
                        ]);
         }
 
@@ -387,7 +387,7 @@ public class NoteServiceTests
             Assert.NotNull(result);
             Assert.Single(result);
             Assert.Equal(owner.Id, result[0].UserId);
-            Assert.Equal(Role.Owner, result[0].Role);
+            Assert.Equal(Role.Admin, result[0].Role);
         }
         else
         {
