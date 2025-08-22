@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { notesService } from '../../../../features/note/services/notesService'
-import type { 
-  NoteResponseDto, 
-  NoteRequestDto, 
-  AddCollaboratorRequestDto, 
-  UpdateCollaboratorRoleRequestDto 
+import { 
+  type NoteResponseDto, 
+  type NoteRequestDto, 
+  type AddCollaboratorRequestDto, 
+  type UpdateCollaboratorRoleRequestDto, 
+  Role
 } from '../types'
+import { useAuthStore } from '../../../session/model/store/auth'
 
 /**
  * Pinia store for managing notes state and API interactions.
@@ -16,11 +18,14 @@ export const useNotesStore = defineStore('notes', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
+  const authStore = useAuthStore()
+
   const hasNotes = computed(() => notes.value.length > 0)
 
   const nonArchivedNotes = computed(() => {
     return notes.value.filter(note => !note.isArchived)
   })
+
   const sortedNotes = computed(() => {
     return [...nonArchivedNotes.value].sort((a, b) => {
       if (a.isPinned && !b.isPinned) {
@@ -44,6 +49,24 @@ export const useNotesStore = defineStore('notes', () => {
 
   const hasArchivedNotes = computed(() => archivedNotes.value.length > 0)
   const hasReminderNotes = computed(() => reminderNotes.value.length > 0)
+
+  function hasEditPermissions(note: NoteResponseDto): boolean {
+    if (!authStore.user || !note) {
+      return false
+    }
+
+    const isOwner = authStore.user.id === note.ownerId
+    if (isOwner) {
+      return true
+    }
+
+    const isCollaboratorWithEditRights = note.collaborators.some(
+      (collaborator) =>
+        collaborator.userId === authStore.user?.id && (collaborator.role === Role.Admin || collaborator.role === Role.Editor)
+    )
+
+    return isCollaboratorWithEditRights
+  }
 
   /**
    * Fetches all notes and populates the state.
@@ -212,7 +235,7 @@ export const useNotesStore = defineStore('notes', () => {
       }
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
-        const collaboratorIndex = note.collaborators.findIndex(c => c.id === updatedCollaborator.id)
+        const collaboratorIndex = note.collaborators.findIndex(c => c.userId === updatedCollaborator.userId)
         if (collaboratorIndex !== -1) {
           note.collaborators[collaboratorIndex] = updatedCollaborator
         }
@@ -234,7 +257,7 @@ export const useNotesStore = defineStore('notes', () => {
       await notesService.removeCollaborator(noteId, collaboratorUserId)
       const note = notes.value.find(n => n.id === noteId)
       if (note) {
-        note.collaborators = note.collaborators.filter(c => c.id !== collaboratorUserId)
+        note.collaborators = note.collaborators.filter(c => c.userId !== collaboratorUserId)
       }
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
@@ -268,6 +291,7 @@ export const useNotesStore = defineStore('notes', () => {
     hasReminderNotes,
     sortedNotes,
     archivedNotes,
+    nonArchivedNotes,
     reminderNotes,
     fetchNotes,
     fetchNoteById,
@@ -279,6 +303,7 @@ export const useNotesStore = defineStore('notes', () => {
     addCollaborator,
     updateCollaboratorRole,
     removeCollaborator,
-    fetchCollaborators
+    fetchCollaborators,
+    hasEditPermissions,
   }
 })
