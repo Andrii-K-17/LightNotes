@@ -27,7 +27,7 @@ export const useNotesStore = defineStore('notes', () => {
   })
 
   const sortedNotes = computed(() => {
-    return [...nonArchivedNotes.value].sort((a, b) => {
+    const sortedNonArchivedNotes = [...nonArchivedNotes.value].sort((a, b) => {
       if (a.isPinned && !b.isPinned) {
         return -1
       }
@@ -37,6 +37,7 @@ export const useNotesStore = defineStore('notes', () => {
       
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     })
+    return sortedNonArchivedNotes.filter(note => note.collaborators.length === 0)
   })
 
   const archivedNotes = computed(() => {
@@ -49,6 +50,26 @@ export const useNotesStore = defineStore('notes', () => {
 
   const hasArchivedNotes = computed(() => archivedNotes.value.length > 0)
   const hasReminderNotes = computed(() => reminderNotes.value.length > 0)
+
+  const sharedNotes = computed(() => {
+    const currentUserId = authStore.user?.id
+    return nonArchivedNotes.value.filter(note => {
+      const isCollaborator = note.collaborators.some(collaborator => 
+        collaborator.userId === currentUserId
+      )
+      const isSharedNoteOwner = note.ownerId === currentUserId && note.collaborators.length > 0
+      return isCollaborator || isSharedNoteOwner
+    }).sort((a, b) => {
+      if (a.isPinned && !b.isPinned) {
+        return -1
+      }
+      if (!a.isPinned && b.isPinned) {
+        return 1
+      }
+      
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    })
+  })
 
   function hasEditPermissions(note: NoteResponseDto): boolean {
     if (!authStore.user || !note) {
@@ -289,6 +310,7 @@ export const useNotesStore = defineStore('notes', () => {
     hasNotes,
     hasArchivedNotes,
     hasReminderNotes,
+    sharedNotes,
     sortedNotes,
     archivedNotes,
     nonArchivedNotes,

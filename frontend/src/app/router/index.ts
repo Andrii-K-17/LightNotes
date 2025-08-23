@@ -8,10 +8,12 @@ import { useAuthStore } from '../../entities/session/model/store/auth'
 import NoteDetailsPage from '../../pages/notes/NoteDetailsPage.vue'
 import TrashPage from '../../pages/notes/TrashPage.vue'
 import RemindersPage from '../../pages/notes/RemindersPage.vue'
+import SharedNotesPage from '../../pages/notes/SharedNotesPage.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/home' },
   { path: '/home', component: NotesPage, meta: { requiresAuth: true } },
+  { path: '/shared-notes', component: SharedNotesPage, meta: { requiresAuth: true } },
   { path: '/trash', component: TrashPage, meta: { requiresAuth: true } },
   { path: '/reminders', component: RemindersPage, meta: { requiresAuth: true } },
   { path: '/login', component: LoginPage },

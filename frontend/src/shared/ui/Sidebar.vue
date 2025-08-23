@@ -5,18 +5,20 @@ import { useAuthStore } from '../../entities/session/model/store/auth'
 import router from '../../app/router'
 import { useUiStore } from '../../app/store/uiStore'
 
-const notesIcon = 'src/assets/images/sidebar/notesIcon.svg'
-const trashIcon = 'src/assets/images/sidebar/trashIcon.svg'
-const remindersIcon = 'src/assets/images/sidebar/remindersIcon.svg'
+const notesIcon = '/src/assets/images/sidebar/notesIcon.svg'
+const sharedIcon = '/src/assets/images/sidebar/sharedIcon.svg'
+const trashIcon = '/src/assets/images/sidebar/trashIcon.svg'
+const remindersIcon = '/src/assets/images/sidebar/remindersIcon.svg'
 
 const route = useRoute()
 const authStore = useAuthStore()
 const uiStore = useUiStore()
 
 const menuItems = [
-  { name: 'Notes', icon: notesIcon, path: '/home' },
-  { name: 'Reminders', icon: remindersIcon, path: '/reminders' },
-  { name: 'Trash', icon: trashIcon, path: '/trash' },
+  { name: 'Notes', icon: notesIcon, id: 'Notes', path: '/home' },
+  { name: 'Shared notes', icon: sharedIcon, id: 'SharedNotes', path: '/shared-notes' },
+  { name: 'Reminders', icon: remindersIcon, id: 'Reminders', path: '/reminders' },
+  { name: 'Trash', icon: trashIcon, id: 'Trash', path: '/trash' },
 ]
 
 const isActive = (path: string) => route.path === path
@@ -49,7 +51,7 @@ const logoutAndCloseSidebar = () => {
         }"
       >
         <svg class="w-7 h-7 text-black dark:text-white">
-          <use :href="`${item.icon}#${item.name}`"></use>
+          <use :href="`${item.icon}#${item.id}`"></use>
         </svg>
         <span>{{ item.name }}</span>
       </router-link>

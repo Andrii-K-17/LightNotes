@@ -2,11 +2,11 @@
 import { computed, ref } from 'vue'
 import { formatDate } from '../../../shared/lib/helpers'
 import type { NoteResponseDto } from '../../note/model/types'
-import { truncateText } from '../../../shared/lib/helpers'
 import router from '../../../app/router'
 import { useRoute } from 'vue-router'
 import { useUiStore } from '../../../app/store/uiStore'
 import Message from '../../../shared/ui/Message.vue'
+import { useAuthStore } from '../../session/model/store/auth'
 
 const pinIcon = 'src/assets/images/noteCard/pinIcon.svg'
 const archiveIcon = 'src/assets/images/noteCard/archiveIcon.svg'
@@ -23,10 +23,6 @@ const route = useRoute()
 
 const isActive = (path: string) => route.path === path
 
-const truncatedContent = computed(() => {
-  return truncateText(props.note.content, 200)
-})
-
 const messageText = ref('')
 
 const showMessage = (message: string, time: number = 3000) => {
@@ -40,6 +36,8 @@ const handleNoteAction = (action: 'pin' | 'archive' | 'delete' | 'restore', even
   event.stopPropagation()
   emit(action, props.note.id)
 }
+
+const authStore = useAuthStore()
 
 const uiStore = useUiStore()
 
@@ -68,44 +66,66 @@ const cardStyle = computed(() => {
   <div
     class="border border-neutral-400 dark:border-neutral-100 hover:border-sky-600 rounded-lg p-4 space-y-2 transition-all duration-300 cursor-pointer flex flex-col justify-between"
     :class="{ 
-      'bg-neutral-100 dark:bg-neutral-800': !props.note.color
+      'bg-neutral-100 dark:bg-neutral-800': !note.color
     }"
-    :style="props.note.color ? cardStyle : {}"
-    @click="isActive('/home') || isActive('/reminders') ? router.push(`/note/${props.note.id}`) : showMessage('Notes in the trash cannot be edited.')"
+    :style="note.color ? cardStyle : {}"
+    @click="isActive('/trash') ? showMessage('Notes in the trash cannot be edited.') : router.push(`/note/${note.id}`)"
   >
-  <div>
-      <h2 class="text-lg font-semibold mb-2 line-clamp-2 dark:text-neutral-50">
-        {{ note.title }}
+    <div class="flex flex-col">
+      <div
+        v-if="note.collaborators.length > 0 && authStore.user?.id === note.ownerId"
+        class="h-5 w-fit mr-1 mb-1 pl-2 pr-2 flex items-center justify-center rounded text-sm text-neutral-900 dark:text-neutral-100 border border-gray-400 dark:border-gray-500"
+      >
+        Owner
+      </div>
+
+      <h2 class="text-lg font-semibold mb-2 line-clamp-1 dark:text-neutral-50">
+        {{ props.note.title }}
       </h2>
+
       <p
         class="text-gray-700 text-sm mb-4 line-clamp-4 dark:text-gray-300"
-        v-html="truncatedContent"
+        v-html="props.note.content"
       >
       </p>
 
-      <div v-if="note.tags && note.tags.length" class="flex flex-wrap gap-2 mt-2">
+      <div
+        v-if="note.tags && note.tags.length"
+        class="flex flex-wrap gap-2 mt-2"
+      >
         <span
           v-for="(tag, index) in note.tags"
           :key="index"
-          class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full"
+          class="bg-gray-200 font-mono font-semibold text-gray-700 text-xs px-2 py-1 rounded-lg"
         >
-          #{{ tag }}
+          #{{ tag.tag }}
         </span>
       </div>
     </div>
 
     <div class="flex justify-between items-center text-xs text-gray-600 dark:text-gray-400 mt-auto">
-      <span>{{ formatDate(note.createdAt) }}</span>
+      <div class="flex flex-col items-start">
+        <div
+          v-if="isActive('/reminders')"
+          class="font-bold text-base"
+        >
+          {{ 
+            `Reminder at: ${note.reminderAt ? new Date(note.reminderAt).toLocaleDateString() : null} ${note.reminderAt ? new Date(note.reminderAt).toLocaleTimeString() : null}`
+          }}
+        </div>
+
+        <div>{{ formatDate(note.createdAt) }}</div>
+      </div>
       
       <div class="flex gap-2">
-        <div v-if="isActive('/home') || isActive('/reminders')">
+        <div v-if="!isActive('/trash')">
           <button
             @click="(event) => handleNoteAction('pin', event)"
             class="hover:text-sky-600"
-            :title="`${props.note.isPinned ? 'Unpin the note' : 'Pin the note'}`"
+            :title="`${note.isPinned ? 'Unpin the note' : 'Pin the note'}`"
           >
             <svg class="w-5 h-5 text-black dark:text-white fill-none hover:fill-blue-500">
-              <use :href="`${pinIcon}#${props.note.isPinned ? 'unpin' : 'pin'}`"></use>
+              <use :href="`${pinIcon}#${note.isPinned ? 'unpin' : 'pin'}`"></use>
             </svg>
           </button>
           <button
