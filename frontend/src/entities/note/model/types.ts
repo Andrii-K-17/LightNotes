@@ -1,4 +1,9 @@
-export type Role = 'Owner' | 'Editor' | 'Viewer'
+export const Role = {
+  Admin: 0,
+  Editor: 1,
+  Viewer: 2
+} as const
+export type Role = typeof Role[keyof typeof Role]
 
 export interface AddCollaboratorRequestDto {
   userEmail: string
@@ -6,9 +11,9 @@ export interface AddCollaboratorRequestDto {
 }
 
 export interface NoteCollaboratorDto {
-  id: string
-  name: string
-  email: string
+  userId: string
+  userName: string
+  userEmail: string
   role: Role
 }
 
