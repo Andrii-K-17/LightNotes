@@ -3,14 +3,20 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import BaseButton from '../../../shared/ui/BaseButton.vue'
 import { useNoteChatStore } from '../chat/model/store/noteChat'
 import { useAuthStore } from '../../../entities/session/model/store/auth'
+import { useNotesStore } from '../../../entities/note/model/store/notes'
+import type { NoteResponseDto } from '../../../entities/note/model/types'
 
 const props = defineProps<{ noteId: string }>()
 const noteChatStore = useNoteChatStore()
 const authStore = useAuthStore()
+const notesStore = useNotesStore()
 
 const newMessage = ref('')
 
-onMounted(() => {
+const note = ref<NoteResponseDto | null>(null)
+
+onMounted(async () => {
+  note.value = await notesStore.fetchNoteById(props.noteId)
   noteChatStore.startConnection(props.noteId)
 })
 
@@ -61,6 +67,12 @@ const handleDeleteMessage = async(id: string) => {
               >
               Delete
             </button>
+            <div
+              v-if="message.senderId === note?.ownerId && authStore.user?.id !== note?.ownerId"
+              class="h-5 ml-1 pl-1 pr-1 flex items-center justify-center rounded text-sm text-neutral-900 dark:text-neutral-100 border border-gray-400 dark:border-gray-500"
+              >
+              Owner
+            </div>
           </div>
           <div>{{ message.text }}</div>
         </div>
