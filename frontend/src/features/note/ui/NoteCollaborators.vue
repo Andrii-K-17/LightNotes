@@ -16,8 +16,6 @@ const note = ref<NoteResponseDto | null>(null)
 const newCollaboratorEmail = ref('')
 const isRolePickerOpen = ref<boolean>(false)
 
-const actionError = ref<string | null>(null)
-
 const collaborators = computed(() => note.value?.collaborators || [])
 
 const isOwner = computed(() => {
@@ -161,7 +159,6 @@ onMounted(async () => {
             v-model="newCollaboratorEmail"
             type="email"
             placeholder="Enter collaborator's email"
-            @input="actionError = null"
             @keyup.enter="addCollaborator"
             class="w-full border rounded px-2 py-1 border-neutral-300 dark:border-neutral-600 dark:text-neutral-100"
           />
@@ -172,7 +169,6 @@ onMounted(async () => {
             Add
           </BaseButton>
         </div>
-        <div v-if="actionError" class="text-sm text-red-500 mt-1">{{ actionError }}</div>
       </div>
     </div>
   </div>
