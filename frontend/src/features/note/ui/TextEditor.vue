@@ -1,10 +1,27 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useNotesStore } from '../../../entities/note/model/store/notes'
+import { useRoute } from 'vue-router'
+import type { NoteResponseDto } from '../../../entities/note/model/types'
 
 const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits(['update:modelValue'])
 
 const editorRef = ref<HTMLElement | null>(null)
+
+const notesStore = useNotesStore()
+const route = useRoute()
+
+const note = ref<NoteResponseDto | null>(null)
+
+const noteId = route.path.split('note/')[1]
+
+const canEdit = computed(() => {
+  if (!note.value) {
+    return false
+  }
+  return notesStore.hasEditPermissions(note.value)
+})
 
 /**
  * Emits the updated HTML content to the parent component.
@@ -18,7 +35,8 @@ const handleInput = () => {
 /**
  * Sets the initial content.
  */
-onMounted(() => {
+onMounted(async () => {
+  note.value = await notesStore.fetchNoteById(noteId)
   if (editorRef.value && props.modelValue) {
     editorRef.value.innerHTML = props.modelValue
   }
@@ -87,7 +105,7 @@ const buttons = [
 
 <template>
   <div class="border rounded-lg overflow-hidden border-neutral-300 dark:border-neutral-600">
-    <div class="flex flex-wrap justify-center gap-2 p-2 border-b border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800">
+    <div v-if="canEdit" class="flex flex-wrap justify-center gap-2 p-2 border-b border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800">
       <button
         v-for="button in buttons"
         :key="button.tag"
@@ -106,7 +124,7 @@ const buttons = [
     <div
       ref="editorRef"
       class="min-h-56 p-3 outline-none dark:text-neutral-100"
-      contenteditable="true"
+      :contenteditable="canEdit"
       @input="handleInput"
     ></div>
   </div>
