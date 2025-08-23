@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { NoteResponseDto } from '../../../entities/note/model/types'
 import BaseButton from '../../../shared/ui/BaseButton.vue'
+import { useNotesStore } from '../../../entities/note/model/store/notes'
 
 const props = defineProps<{ note: NoteResponseDto }>()
 const emit = defineEmits(['update:note'])
+
+const notesStore = useNotesStore()
 
 const newTagInput = ref('')
 
@@ -35,6 +38,10 @@ const showTagsInput = ref(false)
 const toggleTagsInput = () => {
   showTagsInput.value = !showTagsInput.value
 }
+
+const canEdit = computed(() => {
+  return notesStore.hasEditPermissions(props.note)
+})
 </script>
 
 <template>
@@ -47,6 +54,7 @@ const toggleTagsInput = () => {
       >
         #{{ tag.tag }}
         <button
+          v-if="canEdit"
           @click="removeTag(tag.tag)"
           class="w-4 h-4 ml-1 flex items-center justify-center rounded-full text-sm cursor-pointer text-neutral-900 dark:text-neutral-100 border border-gray-300 dark:border-gray-600 hover:text-red-800 dark:hover:text-red-400 hover:scale-110 transition-transform"
         >
@@ -54,7 +62,7 @@ const toggleTagsInput = () => {
         </button>
       </span>
       <button
-        v-if="!showTagsInput"
+        v-if="!showTagsInput && canEdit"
         @click="toggleTagsInput"
         class="px-2 py-1 bg-sky-200 dark:bg-sky-800 dark:text-neutral-100 rounded-lg text-sm flex items-center group cursor-pointer hover:scale-105 transition-transform"
       >
