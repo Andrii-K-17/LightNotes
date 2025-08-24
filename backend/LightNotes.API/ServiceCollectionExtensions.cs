@@ -2,10 +2,12 @@ using LightNotes.Application.MappingProfiles;
 using LightNotes.Application.Services.Auth;
 using LightNotes.Application.Services.Chat;
 using LightNotes.Application.Services.Notes;
+using LightNotes.Application.Services.Users;
 using LightNotes.Infrastructure.Data;
 using LightNotes.Infrastructure.Services.Auth;
 using LightNotes.Infrastructure.Services.Chat;
 using LightNotes.Infrastructure.Services.Notes;
+using LightNotes.Infrastructure.Services.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<INoteService, NoteService>();
         services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IUserService, UserService>();
 
         // Підключення AutoMapper з профілем NoteProfile
         services.AddAutoMapper(typeof(NoteProfile).Assembly);
