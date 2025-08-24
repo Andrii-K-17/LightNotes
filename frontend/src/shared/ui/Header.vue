@@ -4,6 +4,7 @@ import lightThemeIcon from '../../assets/images/theme/lightTheme.svg'
 import darkThemeIcon from '../../assets/images/theme/darkTheme.svg'
 import { useAuthStore } from '../../entities/session/model/store/auth'
 import { useUiStore } from '../../app/store/uiStore'
+import { useRoute } from 'vue-router'
 
 const menuIcon = '/src/assets/images/sidebar/menuIcon.svg'
 const searchIcon = '/src/assets/images/searchPanel/searchIcon.svg#search'
@@ -18,13 +19,16 @@ const themeIconSrc = computed(() => {
   return uiStore.isDark ? darkThemeIcon : lightThemeIcon
 })
 
+const route = useRoute()
+const isActive = (path: string) => route.path === path
+
 onMounted(() => {
   uiStore.initTheme()
 })
 </script>
 
 <template>
-  <header class="bg-neutral-100 text-black p-4 border-b-1 dark:bg-neutral-800 dark:text-white transition duration-500 border-gray-200 dark:border-black flex justify-between items-center">
+  <header class="sticky top-0 h-17 w-full flex justify-between items-center z-50 bg-neutral-100 text-black p-4 border-b-1 dark:bg-neutral-800 dark:text-white transition duration-500 border-gray-200 dark:border-black">
     <button
       @click="uiStore.toggleSidebar"
       class="md:hidden p-2 absolute top-3 left-3 z-50 cursor-pointer"
@@ -35,20 +39,23 @@ onMounted(() => {
       </svg>
     </button>
     
-    <router-link
-      to="/home"
-      class="flex items-center gap-2 md:ml-0"
-      :class="{
-        'ml-0': !authStore.isAuthenticated,
-        'ml-11': authStore.isAuthenticated,
-      }"
-    >
-      <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8 transition-transform duration-300" />
-      <span class="font-semibold text-lg">LightNotes</span>
-    </router-link>
-    
-    <div class="flex justify-end gap-7">
+    <div class="md:flex hidden items-center gap-2 md:ml-0">
+      <router-link
+        class="flex flex-row items-center gap-2 md:ml-0"
+        to="/home"
+        :class="{
+          'ml-0': !authStore.isAuthenticated,
+          'ml-11': authStore.isAuthenticated,
+        }"
+      >
+        <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8 transition-transform duration-300" />
+        <span class="font-semibold text-lg">LightNotes</span>
+      </router-link>
+    </div>
+
+    <div class="flex justify-end items-end gap-7 w-full">
       <button
+        v-if="isActive('/home') || isActive('/shared-notes') || isActive('/trash') || isActive('/reminders')"
         @click="uiStore.toggleSearchPanel"
         class="flex items-center justify-center rounded-full cursor-pointer"
       >
@@ -69,9 +76,11 @@ onMounted(() => {
       </button>
 
       <div v-if="isLoggedIn">
-        <span class="font-medium text-gray-800 dark:text-gray-200 transition-colors duration-500">
-          Hello, {{ userName }}
-        </span>
+        <router-link to="/profile">
+          <span class="font-medium text-gray-800 dark:text-gray-200 transition-colors duration-500">
+            Hello, {{ userName }}
+          </span>
+        </router-link>
       </div>
       <div v-else>
         <router-link
