@@ -32,7 +32,7 @@ const logoutAndCloseSidebar = () => {
 
 <template>
   <aside
-    class="bg-[#f9f6f6] dark:bg-[#1f1f1f] p-2 transition-all duration-300 rounded-lg h-full w-64 z-30 fixed left-0 md:static md:translate-x-0 pr-4 pl-4"
+    class="bg-[#f9f6f6] dark:bg-[#1f1f1f] p-2 transition-all duration-300 rounded-lg h-full w-64 z-30 md:sticky fixed md:top-17 left-0 md:translate-x-0 pr-4 pl-4"
     :class="{
       'translate-x-0 w-full': uiStore.isSidebarOpen,
       '-translate-x-full': !uiStore.isSidebarOpen,
