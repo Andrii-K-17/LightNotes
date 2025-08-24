@@ -6,6 +6,7 @@ import { useNotesStore } from '../../entities/note/model/store/notes'
 import { useUiStore } from '../../app/store/uiStore'
 import BaseButton from '../../shared/ui/BaseButton.vue'
 import router from '../../app/router'
+import SearchPanel from '../../shared/ui/SearchPanel.vue'
 
 const notesStore = useNotesStore()
 const uiStore = useUiStore()
@@ -43,6 +44,10 @@ const createNoteAndRedirect = async () => {
         Create a note
       </BaseButton>
 
+      <div class="mt-2">
+        <SearchPanel />
+      </div>
+
       <main
         class="pb-2 pt-2"
       >
@@ -57,7 +62,7 @@ const createNoteAndRedirect = async () => {
       
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           <NoteCard
-            v-for="note in notesStore.sortedNotes" 
+            v-for="note in notesStore.filteredSortedNotes"
             :key="note.id"
             :note="note"
             @pin="notesStore.updateNote(note.id, {

@@ -7,12 +7,14 @@ import { ref } from 'vue'
 export const useUiStore = defineStore('ui', () => {
   const isSidebarOpen = ref(false)
   const isDark = ref(false)
+  const isSearchPanelOpen = ref(false)
 
   /**
    * Toggles the sidebar's open/closed state.
    */
   function toggleSidebar() {
     isSidebarOpen.value = !isSidebarOpen.value
+    if (isSearchPanelOpen.value) toggleSearchPanel() 
   }
 
   /**
@@ -53,12 +55,22 @@ export const useUiStore = defineStore('ui', () => {
     applyTheme(isDark.value)
   }
 
+  /**
+   * Toggles the search panel.
+   */
+  function toggleSearchPanel() {
+    isSearchPanelOpen.value = !isSearchPanelOpen.value
+  }
+
+
   return {
     isSidebarOpen,
     isDark,
+    isSearchPanelOpen,
     toggleSidebar,
     closeSidebar,
     toggleTheme,
     initTheme,
+    toggleSearchPanel,
   }
 })

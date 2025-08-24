@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useNotesStore } from '../../entities/note/model/store/notes'
 import Sidebar from '../../shared/ui/Sidebar.vue'
 import NoteCard from '../../entities/note/ui/NoteCard.vue'
+import SearchPanel from '../../shared/ui/SearchPanel.vue'
 
 const notesStore = useNotesStore()
 
@@ -15,7 +16,11 @@ onMounted(async () => {
   <div class="flex">
     <Sidebar />
 
-    <div class="flex-1 p-4">
+    <div class="flex-1 p-2">
+      <div class="mb-2">
+        <SearchPanel />
+      </div>
+
       <div
         v-if="notesStore.loading"
         class="text-center dark:text-gray-400"

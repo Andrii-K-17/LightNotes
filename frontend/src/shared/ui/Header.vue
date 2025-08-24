@@ -6,6 +6,7 @@ import { useAuthStore } from '../../entities/session/model/store/auth'
 import { useUiStore } from '../../app/store/uiStore'
 
 const menuIcon = '/src/assets/images/sidebar/menuIcon.svg'
+const searchIcon = '/src/assets/images/searchPanel/searchIcon.svg#search'
 
 const authStore = useAuthStore()
 const uiStore = useUiStore()
@@ -26,7 +27,7 @@ onMounted(() => {
   <header class="bg-neutral-100 text-black p-4 border-b-1 dark:bg-neutral-800 dark:text-white transition duration-500 border-gray-200 dark:border-black flex justify-between items-center">
     <button
       @click="uiStore.toggleSidebar"
-      class="md:hidden p-2 absolute top-3 left-3 z-50"
+      class="md:hidden p-2 absolute top-3 left-3 z-50 cursor-pointer"
       :class="{'hidden': !authStore.isAuthenticated}"
     >
       <svg class="w-6 h-6 text-black dark:text-white">
@@ -48,8 +49,17 @@ onMounted(() => {
     
     <div class="flex justify-end gap-7">
       <button
+        @click="uiStore.toggleSearchPanel"
+        class="flex items-center justify-center rounded-full cursor-pointer"
+      >
+        <svg class="w-5 h-5 text-black dark:text-white">
+          <use :href="searchIcon"></use>
+        </svg>
+      </button>
+
+      <button
         @click="uiStore.toggleTheme"
-        class="flex items-center justify-center rounded-full"
+        class="flex items-center justify-center rounded-full cursor-pointer"
       >
         <img
           :src="themeIconSrc"

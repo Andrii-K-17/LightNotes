@@ -17,6 +17,7 @@ export const useNotesStore = defineStore('notes', () => {
   const notes = ref<NoteResponseDto[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const searchQuery = ref('')
 
   const authStore = useAuthStore()
 
@@ -39,6 +40,25 @@ export const useNotesStore = defineStore('notes', () => {
     })
     return sortedNonArchivedNotes.filter(note => note.collaborators.length === 0)
   })
+
+  const applySearchFilter = (notesToFilter: NoteResponseDto[]) => {
+    if (!searchQuery.value) {
+      return notesToFilter
+    }
+    
+    const query = searchQuery.value.toLowerCase()
+    
+    return notesToFilter.filter(note => 
+      note.title.toLowerCase().includes(query) || 
+      note.content.toLowerCase().includes(query) ||
+      note.tags.some(tag => tag.tag.toLowerCase().includes(query))
+    )
+  }
+  
+  const filteredSortedNotes = computed(() => applySearchFilter(sortedNotes.value))
+  const filteredArchivedNotes = computed(() => applySearchFilter(archivedNotes.value))
+  const filteredReminderNotes = computed(() => applySearchFilter(reminderNotes.value))
+  const filteredSharedNotes = computed(() => applySearchFilter(sharedNotes.value))
 
   const archivedNotes = computed(() => {
     return notes.value.filter(note => note.isArchived)
@@ -315,6 +335,11 @@ export const useNotesStore = defineStore('notes', () => {
     archivedNotes,
     nonArchivedNotes,
     reminderNotes,
+    searchQuery,
+    filteredSortedNotes,
+    filteredArchivedNotes,
+    filteredReminderNotes,
+    filteredSharedNotes,
     fetchNotes,
     fetchNoteById,
     createNote,

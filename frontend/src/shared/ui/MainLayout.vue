@@ -37,7 +37,7 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen flex flex-col">
     <Header />
-    <main class="flex-1 container mx-auto pl-4 pr-4">
+    <main class="flex-1 justify-center pl-4 pr-4">
       <slot />
     </main>
     <Footer />

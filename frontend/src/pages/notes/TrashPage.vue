@@ -5,6 +5,7 @@ import { onMounted } from 'vue'
 import { useNotesStore } from '../../entities/note/model/store/notes'
 import { useUiStore } from '../../app/store/uiStore'
 import { useRoute } from 'vue-router'
+import SearchPanel from '../../shared/ui/SearchPanel.vue'
 
 const notesStore = useNotesStore()
 const uiStore = useUiStore()
@@ -18,7 +19,15 @@ onMounted(() => {
 <template>
   <div class="flex">
     <Sidebar />
-    <div class="flex-1 flex-col p-2" :class="{'hidden': uiStore.isSidebarOpen}">
+
+    <div
+      class="flex-1 flex-col p-2"
+      :class="{'hidden': uiStore.isSidebarOpen}"
+    >
+      <div class="mb-2">
+        <SearchPanel />
+      </div>
+      
       <main class="pb-2 pt-2">
         <div v-if="notesStore.loading" class="flex items-center justify-center dark:text-neutral-100">
           <p>Loading archived notes...</p>
