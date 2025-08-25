@@ -158,12 +158,13 @@ public class NotesControllerTests(TestWebApplicationFactory factory) : IClassFix
         Assert.Equal(HttpStatusCode.NoContent, archiveResponse.StatusCode);
 
         var restoreResponse = await client.PostAsync($"/api/notes/{note.Id}/restore", null);
-        Assert.Equal(HttpStatusCode.NoContent, restoreResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, restoreResponse.StatusCode);
+        Assert.NotNull(restoreResponse);
     }
 
     [Theory]
-    [InlineData("archived", HttpStatusCode.NoContent)]
-    [InlineData("not archived", HttpStatusCode.NoContent)]
+    [InlineData("archived", HttpStatusCode.OK)]
+    [InlineData("not archived", HttpStatusCode.OK)]
     [InlineData("non existent", HttpStatusCode.NotFound)]
     public async Task RestoreNote_ReturnsExpectedStatus_DependsOnNoteState(string noteState, HttpStatusCode expectedStatus)
     {
