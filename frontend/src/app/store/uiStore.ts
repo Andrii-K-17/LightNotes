@@ -8,6 +8,14 @@ export const useUiStore = defineStore('ui', () => {
   const isSidebarOpen = ref(false)
   const isDark = ref(false)
   const isSearchPanelOpen = ref(false)
+  const isMobileMenuOpen = ref(false)
+
+  /**
+   * Toggles the MobileMenu's open/closed state.
+   */
+  function toggleMobileMenu() {
+    isMobileMenuOpen.value = !isMobileMenuOpen.value
+  }
 
   /**
    * Toggles the sidebar's open/closed state.
@@ -67,6 +75,8 @@ export const useUiStore = defineStore('ui', () => {
     isSidebarOpen,
     isDark,
     isSearchPanelOpen,
+    isMobileMenuOpen,
+    toggleMobileMenu,
     toggleSidebar,
     closeSidebar,
     toggleTheme,

@@ -4,8 +4,10 @@ import Footer from './Footer.vue'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useNotesStore } from '../../entities/note/model/store/notes'
 import { truncateText } from '../lib/helpers'
+import { useAuthStore } from '../../entities/session/model/store/auth'
 
 const notesStore = useNotesStore()
+const authStore = useAuthStore()
 
 const timer = ref<number | null>(null)
 
@@ -23,7 +25,9 @@ const checkReminders = () => {
 }
 
 onMounted(async () => {
-  await notesStore.fetchNotes()
+  if (authStore.isAuthenticated) {
+    await notesStore.fetchNotes()
+  }
   timer.value = setInterval(checkReminders, 50000) 
   checkReminders()
 })

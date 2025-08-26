@@ -57,7 +57,7 @@ const clearErrors = () => {
         :loading="auth.loading"
         class="w-full h-10"
       >
-        Sign in
+        Log in
       </BaseButton>
     </div>
 
