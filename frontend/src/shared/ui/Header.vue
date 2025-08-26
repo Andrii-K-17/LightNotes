@@ -9,12 +9,12 @@ import MobileMenu from './MobileMenu.vue'
 
 const menuIcon = '/src/assets/images/sidebar/menuIcon.svg'
 const searchIcon = '/src/assets/images/searchPanel/searchIcon.svg#search'
+const userProfileIcon = '/src/assets/images/profile/userProfileIcon.svg#userProfile'
 
 const authStore = useAuthStore()
 const uiStore = useUiStore()
 
 const isLoggedIn = computed(() => authStore.isAuthenticated)
-const userName = computed(() => authStore.user?.name)
 
 const themeIconSrc = computed(() => {
   return uiStore.isDark ? darkThemeIcon : lightThemeIcon
@@ -44,6 +44,7 @@ onMounted(() => {
     </button>
 
     <button
+      v-if="!authStore.isAuthenticated"
       @click="uiStore.toggleMobileMenu"
       class="md:hidden p-2 absolute top-auto right-3 z-50 cursor-pointer"
     >
@@ -67,7 +68,10 @@ onMounted(() => {
       </router-link>
     </div>
 
-    <div class="md:flex hidden justify-end items-center gap-7 w-full">
+    <div
+      class="flex justify-end items-center gap-7 w-full"
+      :class="{'md:flex hidden': !authStore.isAuthenticated}"
+    >
       <button
         v-if="isActive('/home') || isActive('/shared-notes') || isActive('/trash') || isActive('/reminders')"
         @click="uiStore.toggleSearchPanel"
@@ -90,10 +94,13 @@ onMounted(() => {
       </button>
 
       <div v-if="isLoggedIn">
-        <router-link to="/profile">
-          <span class="font-medium text-gray-800 dark:text-gray-200 transition-colors duration-500">
-            Hello, {{ userName }}
-          </span>
+        <router-link
+          to="/profile"
+          class="flex flex-row justify-center items-center mr-1"
+        >
+          <svg class="w-8 h-8 text-black dark:text-white">
+            <use :href="userProfileIcon"></use>
+          </svg>
         </router-link>
       </div>
       <div v-else class="flex flex-row justify-center items-center gap-x-2">

@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import BaseButton from './BaseButton.vue'
-import { useAuthStore } from '../../entities/session/model/store/auth'
-import router from '../../app/router'
 import { useUiStore } from '../../app/store/uiStore'
 
 const notesIcon = '/src/assets/images/sidebar/notesIcon.svg'
@@ -11,7 +8,6 @@ const trashIcon = '/src/assets/images/sidebar/trashIcon.svg'
 const remindersIcon = '/src/assets/images/sidebar/remindersIcon.svg'
 
 const route = useRoute()
-const authStore = useAuthStore()
 const uiStore = useUiStore()
 
 const menuItems = [
@@ -22,12 +18,6 @@ const menuItems = [
 ]
 
 const isActive = (path: string) => route.path === path
-
-const logoutAndCloseSidebar = () => {
-  authStore.logout()
-  uiStore.closeSidebar()
-  router.push('/login')
-}
 </script>
 
 <template>
@@ -55,14 +45,6 @@ const logoutAndCloseSidebar = () => {
         </svg>
         <span>{{ item.name }}</span>
       </router-link>
-      <hr class="mt-1 mb-3 text-neutral-300"/>
-      <BaseButton
-        @click="logoutAndCloseSidebar"
-        :loading="authStore.loading"
-        class="w-full h-10"
-      >
-        Log out
-      </BaseButton>
     </nav>
   </aside>
 </template>

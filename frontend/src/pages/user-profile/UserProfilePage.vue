@@ -3,10 +3,17 @@ import DeleteAccountButton from '../../features/user-profile/ui/DeleteAccountBut
 import { useAuthStore } from '../../entities/session/model/store/auth'
 import { useUiStore } from '../../app/store/uiStore'
 import Sidebar from '../../shared/ui/Sidebar.vue'
+import BaseButton from '../../shared/ui/BaseButton.vue'
+import router from '../../app/router'
 
 const uiStore = useUiStore()
 
 const authStore = useAuthStore()
+
+const logoutAndCloseSidebar = () => {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -33,8 +40,19 @@ const authStore = useAuthStore()
               <p class="mb-4"><strong>Email:</strong> {{ authStore.user.email }}</p>
             </div>
             <p v-else class="text-gray-500 italic">User data not loaded.</p>
-            
-            <DeleteAccountButton class="mt-7" />
+
+            <hr class="mt-1 mb-3 text-neutral-300"/>
+            <div class="flex flex-col justify-center items-center">
+              <BaseButton
+                @click="logoutAndCloseSidebar"
+                :loading="authStore.loading"
+                class="px-5 py-2 w-50"
+              >
+                Log out
+              </BaseButton>
+
+              <DeleteAccountButton class="mt-5" />
+            </div>
           </div>
         </div>
       </div>

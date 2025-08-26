@@ -9,7 +9,7 @@ const props = defineProps<{
 }>()
 
 const buttonClasses = computed(() => {
-  const baseStyles = 'px-5 py-2 rounded-lg font-medium transition duration-500 flex items-center justify-center'
+  const baseStyles = 'px-5 py-2 rounded-lg cursor-pointer font-medium transition duration-500 flex items-center justify-center'
   const stateStyles = {
     'pointer-events-none': props.disabled || props.loading,
   }
