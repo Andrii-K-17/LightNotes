@@ -16,6 +16,7 @@ const registrationData = ref<RegisterRequestDto>({
 
 const confirmPassword = ref('')
 const passwordMismatch = ref<string | null>(null)
+const agreedToPolicy = ref(false)
 
 const onSubmit = async () => {
   passwordMismatch.value = null
@@ -23,6 +24,10 @@ const onSubmit = async () => {
 
   if (registrationData.value.password !== confirmPassword.value) {
     passwordMismatch.value = 'Passwords do not match.'
+    return
+  }
+
+  if (!agreedToPolicy.value) {
     return
   }
 
@@ -77,6 +82,22 @@ const clearErrors = () => {
         type="password" required minlength="8"
         class="mt-1 w-full rounded border border-neutral-900 px-3 py-2 dark:border-neutral-400 dark:caret-neutral-400 dark:text-neutral-300 hover:border-sky-400"
       />
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <input
+        v-model="agreedToPolicy"
+        type="checkbox"
+        id="privacy-policy-checkbox"
+        required
+        class="form-checkbox w-4 h-4 text-sky-400 focus:ring-sky-400 accent-sky-400"
+      />
+      <label for="privacy-policy-checkbox" class="text-sm dark:text-neutral-300">
+        I agree to the
+        <router-link to="/privacy-policy" class="text-sky-500 hover:text-sky-600">Privacy Policy</router-link>
+        and
+        <router-link to="/terms-of-use" class="text-sky-500 hover:text-sky-600">Terms of Use</router-link>
+      </label>
     </div>
     
     <div>
