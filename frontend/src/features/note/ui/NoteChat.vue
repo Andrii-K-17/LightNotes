@@ -15,6 +15,8 @@ const newMessage = ref('')
 
 const note = ref<NoteResponseDto | null>(null)
 
+const isExpandedChat = ref<boolean>(false)
+
 onMounted(async () => {
   note.value = await notesStore.fetchNoteById(props.noteId)
   noteChatStore.startConnection(props.noteId)
@@ -39,11 +41,29 @@ const handleDeleteMessage = async(id: string) => {
   await noteChatStore.deleteMessage(id)
   newMessage.value = ''
 }
+
+const expandChat = () => {
+  isExpandedChat.value = !isExpandedChat.value
+  isExpandedChat.value ? document.body.classList.add('overflow-hidden') : document.body.classList.remove('overflow-hidden')
+}
 </script>
 
 <template>
-  <div class="border rounded-lg p-3 space-y-3 border-neutral-300 dark:border-neutral-600">
-    <div class="h-40 overflow-y-auto border-b pb-2 border-neutral-300 dark:border-neutral-600 custom-scrollbar">
+  
+  <div
+    class="border rounded-lg pb-3 pr-1 pl-3 pt-1 transition-all duration-500 border-neutral-300 dark:border-neutral-600"
+    :class="{'fixed md:w-4/5 w-full shadow-[0px_0px_50px_0px_rgb(0,_65,_110)] md:h-4/5 h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-neutral-100 dark:bg-neutral-800 flex flex-col': isExpandedChat}"
+  >
+    <div class="flex flex-row justify-end items-center mb-1 mr-1.5">
+      <button
+        @click="expandChat"
+        title="Expand"
+        class="h-5 w-5 ml-1 pl-1 pr-1 flex items-center justify-center rounded-lg text-sm cursor-pointer text-neutral-900 dark:text-neutral-100 border border-gray-400 dark:border-gray-500 hover:scale-110 transition-transform">
+        ⛶
+      </button>
+    </div>
+
+    <div class="overflow-y-auto h-40 mb-3 mr-2 flex-grow border-b pb-2 border-neutral-300 dark:border-neutral-600 custom-scrollbar">
       <div
         v-for="message in noteChatStore.messages"
         :key="message.id"
@@ -78,7 +98,8 @@ const handleDeleteMessage = async(id: string) => {
         </div>
       </div>
     </div>
-    <div class="flex gap-2 flex-row">
+
+    <div class="flex gap-2 flex-row mr-2">
       <input
         v-model="newMessage"
         @keyup.enter="handleSendMessage"

@@ -16,6 +16,8 @@ const note = ref<NoteResponseDto | null>(null)
 
 const noteId = route.path.split('note/')[1]
 
+const isExpandedEditor = ref<boolean>(false)
+
 const canEdit = computed(() => {
   if (!note.value) {
     return false
@@ -101,29 +103,47 @@ const buttons = [
   { text: 'U', tag: 'u', title: 'Underline' },
   { text: 'M', tag: 'mark', title: 'Mark text' },
 ]
+
+const expandEditor = () => {
+  isExpandedEditor.value = !isExpandedEditor.value
+}
 </script>
 
 <template>
-  <div class="border rounded-lg overflow-hidden border-neutral-300 dark:border-neutral-600">
-    <div v-if="canEdit" class="flex flex-wrap justify-center gap-2 p-2 border-b border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800">
-      <button
-        v-for="button in buttons"
-        :key="button.tag"
-        :title="button.title"
-        @click="handleButtonClick(button.tag)"
-        class="px-5 py-1 text-sm border font-bold font-mono rounded-md bg-white border-neutral-300 hover:bg-neutral-200 cursor-pointer dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
-        :class="{
-          'italic': button.text === 'I',
-          'underline': button.text === 'U',
-        }"
+  <div
+    class="border rounded-lg overflow-hidden transition-all duration-500 border-neutral-300 dark:border-neutral-600"
+    :class="{'fixed md:w-[90%] w-full md:h-[85%] shadow-[0px_0px_50px_0px_rgb(0,_65,_110)] h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-neutral-100 dark:bg-neutral-800 flex flex-col': isExpandedEditor}"
+  >
+    <div v-if="canEdit" class="flex flex-row items-center gap-2 p-2 border-b border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800">
+      <div class="flex-grow"></div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          v-for="button in buttons"
+          :key="button.tag"
+          :title="button.title"
+          @click="handleButtonClick(button.tag)"
+          class="px-5 py-1 text-sm border font-bold font-mono rounded-md bg-white border-neutral-300 hover:bg-neutral-200 cursor-pointer dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+          :class="{
+            'italic': button.text === 'I',
+            'underline': button.text === 'U',
+          }"
         >
-        {{ button.text }}
+          {{ button.text }}
+        </button>
+      </div>
+      <div class="flex-grow"></div>
+      <button
+        @click="expandEditor"
+        title="Expand"
+        class="h-5 w-5 pl-1 pr-1 flex items-center justify-center rounded-lg text-sm cursor-pointer text-neutral-900 dark:text-neutral-100 border border-gray-400 dark:border-gray-500 hover:scale-110 transition-transform">
+        ⛶
       </button>
     </div>
 
     <div
       ref="editorRef"
-      class="min-h-56 p-3 outline-none dark:text-neutral-100"
+      class="min-h-55 p-3 overflow-y-scroll outline-none dark:text-neutral-100"
+      :class="{'h-55': !isExpandedEditor}"
       :contenteditable="canEdit"
       @input="handleInput"
     ></div>

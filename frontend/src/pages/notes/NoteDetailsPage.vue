@@ -197,10 +197,16 @@ const canEdit = computed(() => {
           </div>
 
           <div class="mt-6 flex flex-col lg:flex-row gap-y-5">
-            <div class="lg:w-4/5 lg:mr-2">
+            <div 
+              v-if="note.collaborators.length > 0"
+              class="lg:w-4/5 lg:mr-2"
+            >
               <NoteChat :noteId="note.id" />
             </div>
-            <div class="h-full">
+            <div
+              class="h-full"
+              :class="{'w-full': note.collaborators.length === 0}"
+            >
               <NoteCollaborators :noteId="note.id" />
             </div>
           </div>

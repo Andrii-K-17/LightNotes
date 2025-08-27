@@ -18,6 +18,8 @@ const isRolePickerOpen = ref<boolean>(false)
 
 const collaborators = computed(() => note.value?.collaborators || [])
 
+const isExpandedCollabList = ref<boolean>(false)
+
 const isOwner = computed(() => {
   if (!note.value) {
     return false
@@ -90,15 +92,33 @@ const removeCollaborator = async (collaboratorId: string) => {
 onMounted(async () => {
   note.value = await notesStore.fetchNoteById(props.noteId)
 })
+
+const expandCollabList = () => {
+  isExpandedCollabList.value = !isExpandedCollabList.value
+  isExpandedCollabList.value ? document.body.classList.add('overflow-hidden') : document.body.classList.remove('overflow-hidden')
+}
 </script>
 
 <template>
   <Message v-if="messageText" :message="messageText" />
 
-  <div class="p-4 border rounded-lg border-neutral-300 dark:border-neutral-600">
-    <h3 class="text-lg font-semibold mb-2 dark:text-neutral-100">Collaborators</h3>
+  <div
+    class="p-4 border rounded-lg transition-all duration-500 border-neutral-300 dark:border-neutral-600"
+    :class="{'fixed md:w-4/5 w-full shadow-[0px_0px_50px_0px_rgb(0,_65,_110)] md:h-4/5 h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-neutral-100 dark:bg-neutral-800 flex flex-col': isExpandedCollabList}"
+  >
+    <div class="flex flex-row justify-between items-center">
+      <h3 class="text-lg font-semibold mb-2 dark:text-neutral-100">Collaborators</h3>
+      <div class="flex flex-row justify-end items-center mb-1 mr-1.5">
+        <button
+          @click="expandCollabList"
+          title="Expand"
+          class="h-5 w-5 pl-1 pr-1 flex items-center justify-center rounded-lg text-sm cursor-pointer text-neutral-900 dark:text-neutral-100 border border-gray-400 dark:border-gray-500 hover:scale-110 transition-transform">
+          ⛶
+        </button>
+      </div>
+    </div>
 
-    <div v-if="note" class="overflow-y-auto custom-scrollbar">
+    <div v-if="note" class="overflow-y-auto custom-scrollbar h-full flex flex-col">
       <div class="space-y-2 mb-4">
         <div
           v-for="collaborator in collaborators"
@@ -152,7 +172,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="isOwner" class="flex flex-col gap-2">
+      <div v-if="isOwner" class="mt-auto flex flex-col gap-2">
         <h4 class="text-md font-semibold dark:text-white">Add Collaborator</h4>
         <div class="flex gap-2">
           <input

@@ -38,7 +38,7 @@ onMounted(async () => {
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
       >
         <NoteCard
-          v-for="note in notesStore.sharedNotes"
+          v-for="note in notesStore.filteredSharedNotes"
           :key="note.id"
           :note="note"
           @pin="notesStore.updateNote(note.id, {

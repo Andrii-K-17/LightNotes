@@ -154,7 +154,7 @@ const cardStyle = computed(() => {
             class="hover:text-red-600"
             title="Delete the note"
           >
-            <svg class="w-5 h-5 text-black dark:text-white fill-none hover:fill-blue-500">
+            <svg class="w-5 h-5 text-black dark:text-white fill-none hover:fill-red-500">
               <use :href="`${trashIcon}#trash`"></use>
             </svg>
           </button>
