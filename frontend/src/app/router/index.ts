@@ -10,11 +10,12 @@ import TrashPage from '../../pages/notes/TrashPage.vue'
 import RemindersPage from '../../pages/notes/RemindersPage.vue'
 import SharedNotesPage from '../../pages/notes/SharedNotesPage.vue'
 import UserProfilePage from '../../pages/user-profile/UserProfilePage.vue'
+import LandingPage from '../../pages/LandingPage.vue'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/home'
+    component: LandingPage
   },
   {
     path: '/home',
@@ -76,7 +77,7 @@ router.beforeEach((to) => {
     return '/login'
   }
 
-  if (auth.isAuthenticated && (to.path === '/login' || to.path === '/register')) {
+  if (auth.isAuthenticated && (to.path === '/login' || to.path === '/register' || to.path === '/')) {
     return '/home'
   }
 })

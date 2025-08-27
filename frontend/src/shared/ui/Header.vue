@@ -54,17 +54,17 @@ onMounted(() => {
       <p v-else class="text-black dark:text-white font-semibold text-2xl">✕</p>
     </button>
     
-    <div class="flex items-center gap-2 md:ml-0">
+    <div class="flex justify-center items-center gap-2 md:ml-0">
       <router-link
-        class="flex flex-row items-center gap-2 md:ml-0"
-        to="/home"
+        class="flex flex-row justify-center items-center gap-2 md:ml-1"
+        to="/"
         :class="{
-          'ml-0': !authStore.isAuthenticated,
-          'ml-11': authStore.isAuthenticated,
+          'ml-1': !authStore.isAuthenticated,
+          'ml-15': authStore.isAuthenticated,
         }"
       >
         <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8 transition-transform duration-300" />
-        <span class="font-semibold text-lg">LightNotes</span>
+        <span class="font-bold font-sans text-lg">LightNotes</span>
       </router-link>
     </div>
 
@@ -75,7 +75,7 @@ onMounted(() => {
       <button
         v-if="isActive('/home') || isActive('/shared-notes') || isActive('/trash') || isActive('/reminders')"
         @click="uiStore.toggleSearchPanel"
-        class="flex items-center justify-center rounded-full cursor-pointer"
+        class="flex items-center justify-center rounded-full cursor-pointer mr-1"
       >
         <svg class="w-5 h-5 text-black dark:text-white">
           <use :href="searchIcon"></use>
@@ -96,7 +96,7 @@ onMounted(() => {
       <div v-if="isLoggedIn">
         <router-link
           to="/profile"
-          class="flex flex-row justify-center items-center mr-1"
+          class="flex justify-center items-center mr-1"
         >
           <svg class="w-8 h-8 text-black dark:text-white">
             <use :href="userProfileIcon"></use>
