@@ -20,13 +20,13 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore ./LightNotes.API/LightNotes.API.csproj
+        run: dotnet restore ./backend/LightNotes.API/LightNotes.API.csproj
 
       - name: Build
-        run: dotnet build ./LightNotes.API/LightNotes.API.csproj --no-restore --configuration Release
+        run: dotnet build ./backend/LightNotes.API/LightNotes.API.csproj --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test ./backend/LightNotes.API/LightNotes.API.csproj --no-build --verbosity normal
 
   docker:
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}/lightnotes-backend:latest ./LightNotes.API
+        run: docker build -t ghcr.io/${{ github.repository }}/lightnotes-backend:latest ./backend/LightNotes.API
 
       - name: Push Docker image
         run: docker push ghcr.io/${{ github.repository }}/lightnotes-backend:latest
