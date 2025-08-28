@@ -45,17 +45,19 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const result = await authService.login(credentials)
 
-      token.value = result.token
+      if (result) {
+        token.value = result.token
+        
+        const loggedInUser: User = {
+          id: result.userId,
+          name: result.name,
+          email: result.email,
+        }
+        user.value = loggedInUser
       
-      const loggedInUser: User = {
-        id: result.userId,
-        name: result.name,
-        email: result.email,
+        localStorage.setItem('authToken', result.token)
+        localStorage.setItem('user', JSON.stringify(loggedInUser))
       }
-      user.value = loggedInUser
-
-      localStorage.setItem('authToken', result.token)
-      localStorage.setItem('user', JSON.stringify(loggedInUser))
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.'
     } finally {

@@ -12,7 +12,7 @@ export const authService = {
   /**
    * Sends a login request to the API.
    */
-  async login(credentials: LoginRequestDto): Promise<AuthResponseDto> {
+  async login(credentials: LoginRequestDto): Promise<AuthResponseDto | null> {
     return apiClient<AuthResponseDto>('/Auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
