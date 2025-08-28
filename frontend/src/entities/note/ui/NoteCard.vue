@@ -8,10 +8,10 @@ import { useUiStore } from '../../../app/store/uiStore'
 import Message from '../../../shared/ui/Message.vue'
 import { useAuthStore } from '../../session/model/store/auth'
 
-const pinIcon = 'src/assets/images/noteCard/pinIcon.svg'
-const archiveIcon = 'src/assets/images/noteCard/archiveIcon.svg'
-const trashIcon = 'src/assets/images/noteCard/trashIcon.svg'
-const restoreIcon = 'src/assets/images/noteCard/restoreIcon.svg'
+const pinIcon = '/images/noteCard/pinIcon.svg'
+const archiveIcon = '/images/noteCard/archiveIcon.svg'
+const trashIcon = '/images/noteCard/trashIcon.svg'
+const restoreIcon = '/images/noteCard/restoreIcon.svg'
 
 const props = defineProps<{
   note: NoteResponseDto

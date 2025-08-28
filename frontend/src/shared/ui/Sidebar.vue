@@ -2,10 +2,10 @@
 import { useRoute } from 'vue-router'
 import { useUiStore } from '../../app/store/uiStore'
 
-const notesIcon = '/src/assets/images/sidebar/notesIcon.svg'
-const sharedIcon = '/src/assets/images/sidebar/sharedIcon.svg'
-const trashIcon = '/src/assets/images/sidebar/trashIcon.svg'
-const remindersIcon = '/src/assets/images/sidebar/remindersIcon.svg'
+const notesIcon = '/images/sidebar/notesIcon.svg'
+const sharedIcon = '/images/sidebar/sharedIcon.svg'
+const trashIcon = '/images/sidebar/trashIcon.svg'
+const remindersIcon = '/images/sidebar/remindersIcon.svg'
 
 const route = useRoute()
 const uiStore = useUiStore()

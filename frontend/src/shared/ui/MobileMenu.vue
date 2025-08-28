@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useUiStore } from '../../app/store/uiStore'
-import lightThemeIcon from '../../assets/images/theme/lightTheme.svg'
-import darkThemeIcon from '../../assets/images/theme/darkTheme.svg'
+
+const lightThemeIcon = '/images/theme/lightTheme.svg'
+const darkThemeIcon = '/images/theme/darkTheme.svg'
 
 const uiStore = useUiStore()
 

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { onMounted, computed} from 'vue'
-import lightThemeIcon from '../../assets/images/theme/lightTheme.svg'
-import darkThemeIcon from '../../assets/images/theme/darkTheme.svg'
 import { useAuthStore } from '../../entities/session/model/store/auth'
 import { useUiStore } from '../../app/store/uiStore'
 import { useRoute } from 'vue-router'
 import MobileMenu from './MobileMenu.vue'
 
-const menuIcon = '/src/assets/images/sidebar/menuIcon.svg'
-const searchIcon = '/src/assets/images/searchPanel/searchIcon.svg#search'
-const userProfileIcon = '/src/assets/images/profile/userProfileIcon.svg#userProfile'
+const lightThemeIcon = '/images/theme/lightTheme.svg'
+const darkThemeIcon = '/images/theme/darkTheme.svg'
+const menuIcon = '/images/sidebar/menuIcon.svg'
+const searchIcon = '/images/searchPanel/searchIcon.svg#search'
+const userProfileIcon = '/images/profile/userProfileIcon.svg#userProfile'
 
 const authStore = useAuthStore()
 const uiStore = useUiStore()
@@ -63,7 +63,7 @@ onMounted(() => {
           'ml-15': authStore.isAuthenticated,
         }"
       >
-        <img src="../../assets/images/LightNotes.png" alt="Logo" class="h-8 transition-transform duration-300" />
+        <img src="../../../public/images/LightNotes.png" alt="Logo" class="h-8 transition-transform duration-300" />
         <span class="font-bold font-sans text-lg">LightNotes</span>
       </router-link>
     </div>

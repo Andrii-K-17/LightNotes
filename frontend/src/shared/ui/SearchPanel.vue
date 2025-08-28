@@ -4,7 +4,7 @@ import { useNotesStore } from '../../entities/note/model/store/notes'
 import { debounce } from 'lodash'
 import { useUiStore } from '../../app/store/uiStore'
 
-const searchIcon = '/src/assets/images/searchPanel/searchIcon.svg#search'
+const searchIcon = '/images/searchPanel/searchIcon.svg#search'
 
 const notesStore = useNotesStore()
 const uiStore = useUiStore()
