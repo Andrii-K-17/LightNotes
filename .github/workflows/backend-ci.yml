@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions:
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,7 +39,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Log in to GitHub Container Registry
+      - name: Convert owner to lowercase
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> $GITHUB_ENV
+        env:
+          OWNER: ${{ github.repository_owner }}
+
+      - name: Log in to GitHub container registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -44,7 +53,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}/lightnotes-backend:latest ./backend/LightNotes.API
+        run: |
+          docker build -t ghcr.io/${{ env.OWNER_LC }}/lightnotes-backend:latest \
+            -f ./backend/LightNotes.API/Dockerfile ./backend
 
       - name: Push Docker image
-        run: docker push ghcr.io/${{ github.repository }}/lightnotes-backend:latest
+        run: docker push ghcr.io/${{ env.OWNER_LC }}/lightnotes-backend:latest
