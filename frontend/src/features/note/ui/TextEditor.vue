@@ -115,9 +115,9 @@ const expandEditor = () => {
     class="border rounded-lg overflow-hidden transition-all duration-500 border-neutral-300 dark:border-neutral-600"
     :class="{'fixed md:w-[90%] w-full md:h-[85%] shadow-[0px_0px_50px_0px_rgb(0,_65,_110)] h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-neutral-100 dark:bg-neutral-800 flex flex-col': isExpandedEditor}"
   >
-    <div v-if="canEdit" class="flex flex-row items-center gap-2 p-2 border-b border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800">
+    <div class="flex flex-row items-center gap-2 p-2 border-b border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800">
       <div class="flex-grow"></div>
-      <div class="flex flex-wrap items-center gap-2">
+      <div v-if="canEdit" class="flex flex-wrap items-center gap-2">
         <button
           v-for="button in buttons"
           :key="button.tag"
