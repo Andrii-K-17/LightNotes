@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import * as signalR from '@microsoft/signalr'
 import { API_CONFIG } from '../../../../../shared/config/api'
 import { useAuthStore } from '../../../../../entities/session/model/store/auth'
+import { useNotesStore } from '../../../../../entities/note/model/store/notes'
 import { ref } from 'vue'
 import type { Message, SendMessageRequest } from '../types'
 
@@ -16,6 +17,7 @@ export const useNoteChatStore = defineStore('noteChat', () => {
   const chatError = ref<string | null>(null)
 
   const authStore = useAuthStore()
+  const notesStore = useNotesStore()
 
   /**
    * Establishes a SignalR connection to a specific note's chat.
@@ -52,6 +54,11 @@ export const useNoteChatStore = defineStore('noteChat', () => {
     connection.value.on('MessageDeleted', (messageId: string) => {
       messages.value = messages.value.filter(msg => msg.id !== messageId)
     })
+
+    connection.value.on('NoteUpdated', notesStore.handleNoteUpdated)
+    connection.value.on('NoteArchived', notesStore.handleNoteArchived)
+    connection.value.on('NoteRestored', notesStore.handleNoteRestored)
+    connection.value.on('NoteDeleted', notesStore.handleNoteDeleted)
 
     isConnecting.value = true
     chatError.value = null

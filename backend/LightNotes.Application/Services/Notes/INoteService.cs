@@ -16,8 +16,8 @@ public interface INoteService
     Task<NoteResponseDto> CreateNoteAsync(NoteRequestDto request, Guid ownerId); // Створити нотатку
     Task<NoteResponseDto?> UpdateNoteAsync(Guid noteId, NoteRequestDto request, Guid userId); // Оновити нотатку за правами
     Task<bool> DeleteNotePermanentlyAsync(Guid noteId, Guid userId); // Видалити нотатку
-    Task<Note?> ArchiveNoteAsync(Guid noteId, Guid userId); // Архівувати нотатку
-    Task<Note?> RestoreNoteAsync(Guid noteId, Guid userId); // Відновити нотатку з архіву
+    Task<NoteResponseDto?> ArchiveNoteAsync(Guid noteId, Guid userId); // Архівувати нотатку
+    Task<NoteResponseDto?> RestoreNoteAsync(Guid noteId, Guid userId); // Відновити нотатку з архіву
     Task<NoteCollaboratorDto?> AddCollaboratorAsync(Guid noteId, AddCollaboratorRequestDto request, Guid requestingUserId); // Додати учасника
     Task<NoteCollaboratorDto?> UpdateCollaboratorRoleAsync(Guid noteId, Guid collaboratorUserId, UpdateCollaboratorRoleRequestDto request, Guid requestingUserId); // Оновити роль учасника
     Task<bool> RemoveCollaboratorAsync(Guid noteId, Guid collaboratorUserId, Guid requestingUserId); // Видалити учасника

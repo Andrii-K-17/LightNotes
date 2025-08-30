@@ -110,6 +110,50 @@ export const useNotesStore = defineStore('notes', () => {
   }
 
   /**
+   * Handles note updates received via SignalR.
+   */
+  function handleNoteUpdated(updatedNote: NoteResponseDto) {
+    const index = notes.value.findIndex(n => n.id === updatedNote.id)
+    if (index !== -1) {
+      notes.value[index] = updatedNote
+    } else {
+      notes.value.unshift(updatedNote)
+    }
+  }
+
+  /**
+   * Handles archiving of a note received via SignalR.
+   */
+  function handleNoteArchived(noteId: string) {
+    const index = notes.value.findIndex(n => n.id === noteId)
+    if (index !== -1) {
+      notes.value.splice(index, 1)
+    }
+  }
+
+  /**
+   * Handles the restoration of a note received via SignalR.
+   */
+  function handleNoteRestored(restoredNote: NoteResponseDto) {
+    const index = notes.value.findIndex(n => n.id === restoredNote.id)
+    if (index !== -1) {
+      notes.value[index] = restoredNote
+    } else {
+      notes.value.unshift(restoredNote)
+    }
+  }
+
+  /**
+   * Handles the deletion of a note received via SignalR.
+   */
+  function handleNoteDeleted(noteId: string) {
+    const index = notes.value.findIndex(n => n.id === noteId)
+    if (index !== -1) {
+      notes.value.splice(index, 1)
+    }
+  }
+
+  /**
    * Fetches all notes and populates the state.
    */
   async function fetchNotes() {
@@ -352,5 +396,9 @@ export const useNotesStore = defineStore('notes', () => {
     removeCollaborator,
     fetchCollaborators,
     hasEditPermissions,
+    handleNoteUpdated,
+    handleNoteArchived,
+    handleNoteRestored,
+    handleNoteDeleted,
   }
 })

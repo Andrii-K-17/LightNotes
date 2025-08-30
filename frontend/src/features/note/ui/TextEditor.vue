@@ -12,17 +12,18 @@ const editorRef = ref<HTMLElement | null>(null)
 const notesStore = useNotesStore()
 const route = useRoute()
 
-const note = ref<NoteResponseDto | null>(null)
-
-const noteId = route.path.split('note/')[1]
+const currentNote = computed<NoteResponseDto | null>(() => {
+  const noteId = route.path.split('note/')[1]
+  return notesStore.notes.find(n => n.id === noteId) || null
+})
 
 const isExpandedEditor = ref<boolean>(false)
 
 const canEdit = computed(() => {
-  if (!note.value) {
+  if (!currentNote.value) {
     return false
   }
-  return notesStore.hasEditPermissions(note.value)
+  return notesStore.hasEditPermissions(currentNote.value)
 })
 
 /**
@@ -35,21 +36,21 @@ const handleInput = () => {
 }
 
 /**
- * Sets the initial content.
+ * Sets the initial content from the computed note or the prop.
  */
-onMounted(async () => {
-  note.value = await notesStore.fetchNoteById(noteId)
-  if (editorRef.value && props.modelValue) {
-    editorRef.value.innerHTML = props.modelValue
+onMounted(() => {
+  if (editorRef.value) {
+    editorRef.value.innerHTML = props.modelValue || currentNote.value?.content || ''
   }
 })
 
 /**
- * Watches for changes in the modelValue prop to synchronize with the editor's content.
+ * Watches for changes in the note's content from the Pinia store
+ * and synchronizes it with the editor's content.
  */
-watch(() => props.modelValue, (newValue) => {
+watch(() => currentNote.value?.content, (newValue) => {
   if (editorRef.value && newValue !== editorRef.value.innerHTML) {
-    editorRef.value.innerHTML = newValue
+    editorRef.value.innerHTML = newValue || ''
   }
 })
 

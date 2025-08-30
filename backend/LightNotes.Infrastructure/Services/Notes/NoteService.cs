@@ -234,7 +234,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
     }
 
     // Архівування нотатки
-    public async Task<Note?> ArchiveNoteAsync(Guid noteId, Guid userId)
+    public async Task<NoteResponseDto?> ArchiveNoteAsync(Guid noteId, Guid userId)
     {
         _logger.LogInformation("Спроба архівування нотатки ID: {NoteId} користувачем ID: {UserId}", noteId, userId);
 
@@ -254,7 +254,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         if (note.IsArchived)
         {
             _logger.LogInformation("Нотатку ID: {NoteId} вже архівовано.", noteId);
-            return note; // Повертаємо існуючу архівовану нотатку
+            return _mapper.Map<NoteResponseDto>(note); // Повертаємо існуючу архівовану нотатку
         }
 
         note.IsArchived = true;
@@ -263,7 +263,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         {
             await _context.SaveChangesAsync();
             _logger.LogInformation("Нотатку '{Title}' (ID: {NoteId}) успішно архівовано користувачем ID: {UserId}", note.Title, note.Id, userId);
-            return note;
+            return _mapper.Map<NoteResponseDto>(note);
         }
         catch (Exception ex)
         {
@@ -273,7 +273,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
     }
 
     // Відновлення архівованої нотатки
-    public async Task<Note?> RestoreNoteAsync(Guid noteId, Guid userId)
+    public async Task<NoteResponseDto?> RestoreNoteAsync(Guid noteId, Guid userId)
     {
         _logger.LogInformation("Спроба відновлення нотатки ID: {NoteId} користувачем ID: {UserId}", noteId, userId);
 
@@ -293,7 +293,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         if (!note.IsArchived)
         {
             _logger.LogInformation("Нотатку ID: {NoteId} не потрібно відновлювати - вона не архівована.", noteId);
-            return note;
+            return _mapper.Map<NoteResponseDto>(note);
         }
 
         note.IsArchived = false;
@@ -302,7 +302,7 @@ public class NoteService(ApplicationDbContext context, IMapper mapper, ILogger<N
         {
             await _context.SaveChangesAsync();
             _logger.LogInformation("Нотатку '{Title}' (ID: {NoteId}) успішно відновлено користувачем ID: {UserId}", note.Title, note.Id, userId);
-            return note;
+            return _mapper.Map<NoteResponseDto>(note);
         }
         catch (Exception ex)
         {

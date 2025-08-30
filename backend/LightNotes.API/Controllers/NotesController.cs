@@ -41,16 +41,22 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
         return userId;
     }
 
-    /// <summary>
-    /// Надсилає повідомлення клієнтам, які підписані на групу з вказаним ідентифікатором нотатки.
-    /// </summary>
-    private async Task NotifyClientsAsync(Guid noteId, string method, string message)
+    // Методи для надсилання цільових SignalR-сповіщень клієнтам, забезпечуючи оновлення стану нотаток у реальному часі.
+    private async Task NotifyNoteUpdatedAsync(Guid noteId, NoteResponseDto updatedNote)
     {
-        await _hubContext.Clients.Group(noteId.ToString()).SendAsync(method, new
-        {
-            message,
-            user = CurrentUserName
-        });
+        await _hubContext.Clients.Group(noteId.ToString()).SendAsync("NoteUpdated", updatedNote);
+    }
+    private async Task NotifyNoteArchivedAsync(Guid noteId)
+    {
+        await _hubContext.Clients.Group(noteId.ToString()).SendAsync("NoteArchived", noteId);
+    }
+    private async Task NotifyNoteRestoredAsync(Guid noteId, NoteResponseDto restoredNote)
+    {
+        await _hubContext.Clients.Group(noteId.ToString()).SendAsync("NoteRestored", restoredNote);
+    }
+    private async Task NotifyNoteDeletedAsync(Guid noteId)
+    {
+        await _hubContext.Clients.Group(noteId.ToString()).SendAsync("NoteDeleted", noteId);
     }
 
     /// <summary>
@@ -158,7 +164,7 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
             return NoteNotFoundProblem();
         }
 
-        await NotifyClientsAsync(id, "NoteUpdated", $"Нотатку \"{updatedNote.Title}\" оновлено.");
+        await NotifyNoteUpdatedAsync(id, updatedNote);
 
         return Ok(updatedNote);
     }
@@ -183,7 +189,7 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
             return NoteNotFoundProblem();
         }
 
-        await NotifyClientsAsync(id, "NoteArchived", $"Нотатку \"{note.Title}\" перенесено до архіву.");
+        await NotifyNoteArchivedAsync(id);
 
         return NoContent();
     }
@@ -208,7 +214,7 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
             return NoteNotFoundProblem();
         }
 
-        await NotifyClientsAsync(id, "NoteRestored", $"Нотатку \"{note.Title}\" відновлено.");
+        await NotifyNoteRestoredAsync(id, note);
 
         return Ok(note);
     }
@@ -237,7 +243,7 @@ public class NotesController(INoteService noteService, IHubContext<NoteChatHub> 
             );
         }
 
-        await NotifyClientsAsync(id, "NoteDeleted", $"Нотатку ID {id} остаточно видалено.");
+        await NotifyNoteDeletedAsync(id);
 
         return NoContent();
     }
