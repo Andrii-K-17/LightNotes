@@ -55,7 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddCors(options =>
         {
             options.AddPolicy("AllowSpecificOrigin", builder =>
-                builder.WithOrigins("http://localhost:3000", "http://localhost:5173")
+                builder.WithOrigins("http://localhost:3000", "http://localhost:5173", "https://lightnotes.up.railway.app")
                        .AllowAnyHeader()
                        .AllowAnyMethod()
                        .AllowCredentials()); // дозволити надсилати куки або токени
