@@ -44,3 +44,50 @@ npm install
 ```bash
 npm run dev
 ```
+
+---
+
+## Sequence Diagram
+
+The following diagram illustrates the interaction between the User, Frontend (Vue), Backend (ASP.NET Core Web API), and Database (MySQL) via HTTP and WebSocket:
+
+```mermaid
+sequenceDiagram
+  actor User as User
+  participant Frontend (Vue)
+  participant Backend (ASP.NET Core web API)
+  participant Database (MySql)
+
+  autonumber
+  User->>Frontend (Vue): Data entry
+  activate Frontend (Vue)
+  Frontend (Vue)->>Frontend (Vue): Client-side validation
+  Frontend (Vue)->>Frontend (Vue): DTO serialization to JSON
+
+  alt HTTP
+    Frontend (Vue)->>Backend (ASP.NET Core web API): HTTP request: JSON
+    activate Backend (ASP.NET Core web API)
+    Backend (ASP.NET Core web API)->>Backend (ASP.NET Core web API): JSON deserialization to DTO
+    Backend (ASP.NET Core web API)->>Backend (ASP.NET Core web API): Validation via attributes
+    Backend (ASP.NET Core web API)-)+Database (MySql): Query (via EF Core)
+    Database (MySql)--)-Backend (ASP.NET Core web API): Result (data from DB)
+    Backend (ASP.NET Core web API)->>Backend (ASP.NET Core web API): DTO serialization to JSON
+    Backend (ASP.NET Core web API)-->>Frontend (Vue): HTTP response: JSON
+    deactivate Backend (ASP.NET Core web API)
+  else WebSocket
+    autonumber 4
+    Frontend (Vue)-)Backend (ASP.NET Core web API): WebSocket frames: JSON
+    activate Backend (ASP.NET Core web API)
+    Backend (ASP.NET Core web API)->>Backend (ASP.NET Core web API): JSON deserialization to DTO
+    Backend (ASP.NET Core web API)->>Backend (ASP.NET Core web API): Validation in hub methods
+    Backend (ASP.NET Core web API)-)+Database (MySql): Query (via EF Core)
+    Database (MySql)--)-Backend (ASP.NET Core web API): Result (data from DB)
+    Backend (ASP.NET Core web API)->>Backend (ASP.NET Core web API): DTO serialization to JSON
+    Backend (ASP.NET Core web API)--)Frontend (Vue): WebSocket frames: JSON
+    deactivate Backend (ASP.NET Core web API)
+  end
+
+  Frontend (Vue)->>Frontend (Vue): JSON deserialization to DTO
+  Frontend (Vue)-->>User: Displaying the result
+  deactivate Frontend (Vue)
+```
