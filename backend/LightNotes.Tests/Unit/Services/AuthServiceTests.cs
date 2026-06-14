@@ -26,8 +26,15 @@ public class AuthServiceTests
     private static DbContextOptions<ApplicationDbContext> CreateOptions()
     {
         return new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseSqlite($"DataSource=file:{Guid.NewGuid()}?mode=memory&cache=shared")
             .Options;
+    }
+
+    private static ApplicationDbContext CreateContext(DbContextOptions<ApplicationDbContext> options)
+    {
+        var context = new ApplicationDbContext(options);
+        context.Database.EnsureCreated();
+        return context;
     }
 
     private static async Task<User> CreateTestUserAsync(ApplicationDbContext context, string? password = "", string? email = null)
@@ -49,7 +56,8 @@ public class AuthServiceTests
     [InlineData(false)]
     public async Task RegisterAsync_ReturnsNullOrAuthResponse_DependsOnEmailExistence(bool emailExists)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
         var existingUser = await CreateTestUserAsync(context, "existing@example.com");
         var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
 
@@ -78,7 +86,8 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginAsync_ReturnsAuthResponse_WhenCredentialsAreValid()
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var password = "ValidPassword123";
 
@@ -105,7 +114,8 @@ public class AuthServiceTests
     [InlineData("User not found", "missing@example.com", "password", null)]
     public async Task LoginAsync_ReturnsNull_WhenPasswordIsWrongOrUserNotFound(string condition, string email, string inputPassword, string? actualPassword)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
         var service = new AuthService(context, _mockConfig.Object, _mockLogger.Object);
 
         if (condition == "Password is wrong")

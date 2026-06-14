@@ -1,16 +1,11 @@
-using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using LightNotes.Infrastructure.Data;
 using LightNotes.Infrastructure.Services.Chat;
 using LightNotes.Application.DTOs.Chat;
 using LightNotes.Domain.Entities;
-using LightNotes.Domain.Enums;
 
 namespace LightNotes.Tests.Unit.Services;
 
@@ -22,8 +17,15 @@ public class ChatServiceTests
     private static DbContextOptions<ApplicationDbContext> CreateOptions()
     {
         return new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseSqlite($"DataSource=file:{Guid.NewGuid()}?mode=memory&cache=shared")
             .Options;
+    }
+
+    private static ApplicationDbContext CreateContext(DbContextOptions<ApplicationDbContext> options)
+    {
+        var context = new ApplicationDbContext(options);
+        context.Database.EnsureCreated();
+        return context;
     }
 
     private static async Task<Note> CreateTestNoteAsync(ApplicationDbContext context, Guid? ownerId = null, bool isArchived = false)
@@ -72,7 +74,8 @@ public class ChatServiceTests
     [Fact]
     public async Task SaveMessageAsync_ReturnsMappedDto_WhenValidInput()
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var user = await CreateTestUserAsync(context);
         var note = await CreateTestNoteAsync(context, ownerId: user.Id);
@@ -100,7 +103,8 @@ public class ChatServiceTests
     [InlineData("Note", "Нотатку не знайдено.")]
     public async Task SaveMessageAsync_ThrowsArgumentException_WhenNoteOrSenderNotFound(string missing, string expectedMessage)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var user = await CreateTestUserAsync(context);
         var nonExistentNoteId = Guid.NewGuid();
@@ -122,7 +126,8 @@ public class ChatServiceTests
     [Fact]
     public async Task DeleteMessageAsync_ReturnsTrue_WhenMessageExistsAndUserIsSender()
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var user = await CreateTestUserAsync(context);
         var note = await CreateTestNoteAsync(context, ownerId: user.Id);
@@ -133,13 +138,14 @@ public class ChatServiceTests
         var result = await service.DeleteMessageAsync(message.Id, user.Id);
 
         Assert.True(result);
-        Assert.Null(await context.ChatMessages.FindAsync(message.Id));
+        Assert.Null(await context.ChatMessages.FindAsync([message.Id], TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task DeleteMessageAsync_ReturnsFalse_WhenMessageNotFound()
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
         var service = new ChatService(context, _mockMapper.Object, _mockLogger.Object);
 
         var result = await service.DeleteMessageAsync(Guid.NewGuid(), Guid.NewGuid());
@@ -150,7 +156,8 @@ public class ChatServiceTests
     [Fact]
     public async Task DeleteMessageAsync_ReturnsFalse_WhenUserIsNotSender()
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var sender = await CreateTestUserAsync(context);
         var otherUser = await CreateTestUserAsync(context);
@@ -169,7 +176,8 @@ public class ChatServiceTests
     [InlineData(false)]
     public async Task GetChatHistoryAsync_ReturnsMessagesOrNull_DependsOnUserAccess(bool userHasAccess)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var owner = await CreateTestUserAsync(context);
         var otherUser = await CreateTestUserAsync(context);

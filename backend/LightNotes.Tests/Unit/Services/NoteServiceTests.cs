@@ -1,12 +1,7 @@
-using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
 using LightNotes.Infrastructure.Data;
 using LightNotes.Infrastructure.Services.Notes;
 using LightNotes.Application.DTOs.Notes;
@@ -23,8 +18,15 @@ public class NoteServiceTests
     private static DbContextOptions<ApplicationDbContext> CreateOptions()
     {
         return new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseSqlite($"DataSource=file:{Guid.NewGuid()}?mode=memory&cache=shared")
             .Options;
+    }
+
+    private static ApplicationDbContext CreateContext(DbContextOptions<ApplicationDbContext> options)
+    {
+        var context = new ApplicationDbContext(options);
+        context.Database.EnsureCreated();
+        return context;
     }
 
     private static async Task<Note> CreateTestNoteAsync(ApplicationDbContext context, Guid? ownerId = null, bool isArchived = false)
@@ -68,7 +70,8 @@ public class NoteServiceTests
     [Fact]
     public async Task GetAllNotesAsync_ReturnsMappedNotes_WhenUserIsOwnerAndCollaborator()
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
         var user = await CreateTestUserAsync(context);
 
         var ownedNote = await CreateTestNoteAsync(context, ownerId: user.Id);
@@ -89,13 +92,14 @@ public class NoteServiceTests
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
     }
-    
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task GetNoteByIdAsync_ReturnsCorrectNote_WhenAccessDependsOnUser(bool userHasAccess)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var noteOwner = await CreateTestUserAsync(context);
         var anotherUser = await CreateTestUserAsync(context);
@@ -129,13 +133,14 @@ public class NoteServiceTests
             Assert.Null(fetchedNote);
         }
     }
-    
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task ArchiveNoteAsync_ReturnsExpectedResult_DependentOnUserOwnership(bool userIsOwner)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var creator = await CreateTestUserAsync(context);
         var randomUser = await CreateTestUserAsync(context);
@@ -163,7 +168,8 @@ public class NoteServiceTests
     [InlineData(false)]
     public async Task RestoreNoteAsync_ReturnsExpectedResult_DependingOnOwnership(bool userIsOwner)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var owner = await CreateTestUserAsync(context);
         var nonOwner = await CreateTestUserAsync(context);
@@ -191,7 +197,8 @@ public class NoteServiceTests
     [InlineData(false)]
     public async Task DeleteNotePermanentlyAsync_ReturnsExpectedResult_BasedOnOwnership(bool userIsOwner)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var owner = await CreateTestUserAsync(context);
         var outsider = await CreateTestUserAsync(context);
@@ -202,7 +209,7 @@ public class NoteServiceTests
         var service = new NoteService(context, _mockMapper.Object, _mockLogger.Object);
 
         var deletionSucceeded = await service.DeleteNotePermanentlyAsync(noteToDelete.Id, currentUserId);
-        var noteInDb = await context.Notes.FindAsync(noteToDelete.Id);
+        var noteInDb = await context.Notes.FindAsync([noteToDelete.Id], TestContext.Current.CancellationToken);
 
         if (userIsOwner)
         {
@@ -221,7 +228,8 @@ public class NoteServiceTests
     [InlineData(false)]
     public async Task AddCollaboratorAsync_ReturnsExpectedResult_BasedOnOwnership(bool isOwner)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var owner = await CreateTestUserAsync(context, "owner@example.com");
         var notOwner = await CreateTestUserAsync(context, "notowner@example.com");
@@ -250,7 +258,7 @@ public class NoteServiceTests
             Assert.Equal(Role.Editor, result.Role);
 
             var added = await context.NoteCollaborators
-                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == newCollaborator.Id);
+                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == newCollaborator.Id, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.NotNull(added);
             Assert.Equal(Role.Editor, added.Role);
@@ -260,7 +268,7 @@ public class NoteServiceTests
             Assert.Null(result);
 
             var added = await context.NoteCollaborators
-                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == newCollaborator.Id);
+                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == newCollaborator.Id, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Null(added);
         }
@@ -271,7 +279,8 @@ public class NoteServiceTests
     [InlineData(false)]
     public async Task UpdateCollaboratorRoleAsync_ReturnsExpectedResult_BasedOnOwnership(bool isOwner)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var owner = await CreateTestUserAsync(context);
         var notOwner = await CreateTestUserAsync(context);
@@ -303,7 +312,7 @@ public class NoteServiceTests
             Assert.Equal(Role.Editor, result.Role);
 
             var updated = await context.NoteCollaborators
-                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == collaborator.Id);
+                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == collaborator.Id, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.NotNull(updated);
             Assert.Equal(Role.Editor, updated.Role);
@@ -313,7 +322,7 @@ public class NoteServiceTests
             Assert.Null(result);
 
             var unchanged = await context.NoteCollaborators
-                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == collaborator.Id);
+                .FirstOrDefaultAsync(c => c.NoteId == note.Id && c.UserId == collaborator.Id, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.NotNull(unchanged);
             Assert.Equal(Role.Viewer, unchanged.Role);
@@ -325,7 +334,8 @@ public class NoteServiceTests
     [InlineData(false)]
     public async Task RemoveCollaboratorAsync_BehavesCorrectly_BasedOnOwnership(bool isOwner)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
 
         var owner = await CreateTestUserAsync(context);
         var notOwner = await CreateTestUserAsync(context);
@@ -346,7 +356,7 @@ public class NoteServiceTests
 
             var remainingCollaborators = await context.NoteCollaborators
                 .Where(nc => nc.NoteId == note.Id && nc.UserId == collaborator.Id)
-                .ToListAsync();
+                .ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Empty(remainingCollaborators);
         }
@@ -355,13 +365,14 @@ public class NoteServiceTests
             Assert.False(result);
         }
     }
-    
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task GetNoteCollaboratorsAsync_ReturnsCorrectResult_BasedOnUserAccess(bool hasAccess)
     {
-        await using var context = new ApplicationDbContext(CreateOptions());
+        var options = CreateOptions();
+        await using var context = CreateContext(options);
         var owner = await CreateTestUserAsync(context);
         var outsider = await CreateTestUserAsync(context);
         var note = await CreateTestNoteAsync(context, owner.Id);

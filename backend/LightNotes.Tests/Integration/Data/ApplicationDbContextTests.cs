@@ -1,18 +1,18 @@
-using System;
-using System.Threading.Tasks;
 using LightNotes.Domain.Entities;
 using LightNotes.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.MySql;
-using Xunit;
 
 namespace LightNotes.Tests.Integration.Data;
 
+/// <summary>
+/// Integration tests for ApplicationDbContext utilizing an isolated, containerized MySQL database.
+/// </summary>
 public class ApplicationDbContextTests : IAsyncLifetime
 {
     private readonly MySqlContainer _mySqlContainer;
     private DbContextOptions<ApplicationDbContext>? _options;
-    
+
     public ApplicationDbContextTests()
     {
         _mySqlContainer = new MySqlBuilder()
@@ -22,7 +22,7 @@ public class ApplicationDbContextTests : IAsyncLifetime
             .Build();
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _mySqlContainer.StartAsync();
 
@@ -31,20 +31,22 @@ public class ApplicationDbContextTests : IAsyncLifetime
             .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
             .Options;
 
-        using var context = new ApplicationDbContext(_options);
+        await using var context = new ApplicationDbContext(_options);
         await context.Database.EnsureCreatedAsync();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await _mySqlContainer.StopAsync();
+
+        GC.SuppressFinalize(this);
     }
 
     private ApplicationDbContext CreateContext()
     {
         if (_options == null)
         {
-            throw new Exception("DbContext options are not initialized");
+            throw new InvalidOperationException("DbContext options are not initialized");
         }
         return new ApplicationDbContext(_options);
     }
@@ -53,15 +55,15 @@ public class ApplicationDbContextTests : IAsyncLifetime
     public async Task AddNote_WithOwner_NoteAndOwnerAreSavedCorrectly()
     {
         await using var context = CreateContext();
-        
+
         var testUser = new User { Email = "test@example.com" };
         var testNote = new Note { Title = "Test Note", Owner = testUser };
 
         context.Users.Add(testUser);
         context.Notes.Add(testNote);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var savedNote = await context.Notes.Include(n => n.Owner).FirstOrDefaultAsync();
+        var savedNote = await context.Notes.Include(n => n.Owner).FirstOrDefaultAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.NotNull(savedNote);
         Assert.Equal("Test Note", savedNote.Title);
@@ -77,18 +79,18 @@ public class ApplicationDbContextTests : IAsyncLifetime
         await using var context1 = CreateContext();
         var user = new User { Id = userId, Email = "owner@example.com" };
         var note = new Note { Title = "Note A", OwnerId = userId };
-        
+
         context1.Users.Add(user);
         context1.Notes.Add(note);
-        await context1.SaveChangesAsync();
+        await context1.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await using var context2 = CreateContext();
-        var userToDelete = await context2.Users.FindAsync(userId);
+        var userToDelete = await context2.Users.FindAsync([userId], TestContext.Current.CancellationToken);
         context2.Users.Remove(userToDelete!);
-        await context2.SaveChangesAsync();
+        await context2.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await using var context3 = CreateContext();
-        var notesCount = await context3.Notes.CountAsync();
+        var notesCount = await context3.Notes.CountAsync(cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(0, notesCount);
     }
 
@@ -102,9 +104,9 @@ public class ApplicationDbContextTests : IAsyncLifetime
         var user2 = new User { Email = email };
 
         context.Users.Add(user1);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         context.Users.Add(user2);
-        await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+        await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(TestContext.Current.CancellationToken));
     }
 }
